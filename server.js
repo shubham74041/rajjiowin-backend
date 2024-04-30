@@ -11,6 +11,10 @@ app.use(cors());
 
 app.get("/", cors(), (req, res) => {});
 
+app.get("/", (req, res) => {
+  res.send("Welcome");
+});
+
 app.post("/", async (req, res) => {
   const { phoneNumber, password } = req.body;
 
