@@ -3,9 +3,8 @@ const mongoose = require("mongoose");
 // Load environment variables
 require("dotenv").config();
 
-const DBURL = process.env.ATLASDB;
-
-console.log("MongoDB URL:", DBURL);
+const DBURL =
+  "mongodb+srv://piyush2909:X42h2Gmo2LvR7Uer@cluster1.yv0fibk.mongodb.net/?retryWrites=true&w=majorityappName=Cluster1";
 
 // Connect to MongoDB
 main()
