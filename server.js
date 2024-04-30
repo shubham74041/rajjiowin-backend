@@ -11,8 +11,9 @@ app.use(cors());
 
 // app.get("/", cors(), (req, res) => {});
 
-app.get("/", (req, res) => {
-  res.send("Welcome");
+app.get("/", async (req, res) => {
+  const data = await User.find({});
+  res.send(data);
 });
 
 app.post("/", async (req, res) => {
