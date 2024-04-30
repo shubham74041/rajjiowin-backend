@@ -1,17 +1,22 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 
+// Check if the MongoDB URL is properly configured in the environment variables
 const MONGO_URL = "mongodb://127.0.0.1:27017/project-data";
-// const DBURL = process.env.ATLASDB;
 
 main()
   .then(() => {
-    console.log("Connect to DB");
+    console.log("Connected to DB");
   })
-  .catch((err) => console.log(err));
+  .catch((err) => console.error("Error connecting to DB:", err));
 
 async function main() {
-  await mongoose.connect(MONGO_URL);
+  // Add useNewUrlParser and useUnifiedTopology options to the connect method
+  await mongoose.connect(MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  console.log("Connected to MongoDB");
 }
 
 const userSchema = new mongoose.Schema({
@@ -36,7 +41,7 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
