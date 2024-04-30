@@ -1,14 +1,18 @@
-require("dotenv").config();
 const mongoose = require("mongoose");
 
-// const MONGO_URL = "mongodb://127.0.0.1:27017/project-data";
+// Load environment variables
+require("dotenv").config();
+
 const DBURL = process.env.ATLASDB;
+
 console.log("MongoDB URL:", DBURL);
+
+// Connect to MongoDB
 main()
   .then(() => {
-    console.log("Connect to DB");
+    console.log("Connected to MongoDB");
   })
-  .catch((err) => console.log(err.message));
+  .catch((err) => console.log("MongoDB connection error:", err.message));
 
 async function main() {
   await mongoose.connect(DBURL, {
@@ -17,6 +21,7 @@ async function main() {
   });
 }
 
+// Define user schema
 const userSchema = new mongoose.Schema({
   email: {
     type: String,

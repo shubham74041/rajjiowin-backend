@@ -9,53 +9,60 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-// app.get("/", cors(), (req, res) => {});
-
+// Root endpoint
 app.get("/", async (req, res) => {
-  const data = await User.find({});
-  res.send(data);
+  try {
+    const data = await User.find({});
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
+// Login endpoint
 app.post("/", async (req, res) => {
   const { phoneNumber, password } = req.body;
 
   try {
-    const data = await User.findOne({ phoneNumber: phoneNumber });
-    console.log(data);
+    const user = await User.findOne({ phoneNumber: phoneNumber });
+    if (!user) {
+      res.json("notexist");
+      return;
+    }
 
-    if (data.password === password) {
+    if (user.password === password) {
       res.json("exist");
     } else {
       res.json("notexist");
     }
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-//signup
+// Signup endpoint
 app.post("/signup", async (req, res) => {
   const { email, phoneNumber, password } = req.body;
 
-  const data = {
-    email: email,
-    phoneNumber: phoneNumber,
-    password: password,
-  };
   try {
     const isExist = await User.findOne({ phoneNumber: phoneNumber });
-    console.log(isExist);
     if (isExist) {
       res.json("exists");
-    } else {
-      res.json("notexists");
-      await User.insertMany([data]);
+      return;
     }
+
+    await User.create({ email, phoneNumber, password });
+    res.json("notexists");
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.listen(8080, () => {
-  console.log("Listening on port 8080");
+// Listen on dynamically assigned port by Vercel
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
 });
