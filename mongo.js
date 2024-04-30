@@ -1,8 +1,8 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 
-// const MONGO_URL = "mongodb://127.0.0.1:27017/project-data";
-const DBURL = process.env.ATLASDB;
+const MONGO_URL = "mongodb://127.0.0.1:27017/project-data";
+// const DBURL = process.env.ATLASDB;
 
 main()
   .then(() => {
@@ -11,7 +11,7 @@ main()
   .catch((err) => console.log(err));
 
 async function main() {
-  await mongoose.connect(DBURL);
+  await mongoose.connect(MONGO_URL);
 }
 
 const userSchema = new mongoose.Schema({
