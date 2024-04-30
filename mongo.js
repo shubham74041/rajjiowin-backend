@@ -8,10 +8,13 @@ main()
   .then(() => {
     console.log("Connect to DB");
   })
-  .catch((err) => console.log(err));
+  .catch((err) => console.log(err.message));
 
 async function main() {
-  await mongoose.connect(DBURL);
+  await mongoose.connect(DBURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 }
 
 const userSchema = new mongoose.Schema({
