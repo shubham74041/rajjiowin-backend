@@ -10,15 +10,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Root endpoint
-app.get("/", async (req, res) => {
-  try {
-    const data = await User.find({});
-    res.json(data);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+// app.get("/", async (req, res) => {
+//   try {
+//     const data = await User.find({});
+//     res.json(data);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
 
 // Login endpoint
 app.post("/", async (req, res) => {
@@ -27,18 +27,20 @@ app.post("/", async (req, res) => {
   try {
     const user = await User.findOne({ phoneNumber: phoneNumber });
     if (!user) {
-      res.json("notexist");
+      // User does not exist
+      res.json({ success: false, message: "notexist" });
       return;
     }
 
     if (user.password === password) {
-      res.json("exist");
+      //Successful login
+      res.json({ success: true, message: "exist" });
     } else {
-      res.json("notexist");
+      res.json({ success: false, message: "notexist" });
     }
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
@@ -49,15 +51,15 @@ app.post("/signup", async (req, res) => {
   try {
     const isExist = await User.findOne({ phoneNumber: phoneNumber });
     if (isExist) {
-      res.json("exists");
+      res.json({ success: false, message: "exists" });
       return;
     }
-
+    // Create new user
     await User.create({ email, phoneNumber, password });
-    res.json("notexists");
+    res.json({ success: true, message: "notexists" });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
