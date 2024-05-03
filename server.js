@@ -28,19 +28,19 @@ app.post("/", async (req, res) => {
     const user = await User.findOne({ phoneNumber: phoneNumber });
     if (!user) {
       // User does not exist
-      res.json({ success: false, message: "notexist" });
+      // res.json({ success: false, message: "notexist" });
       return;
     }
 
     if (user.password === password) {
       //Successful login
-      res.json({ success: true, message: "exist" });
+      res.json(user);
     } else {
-      res.json({ success: false, message: "notexist" });
+      res.json("notexist");
     }
   } catch (err) {
     console.log(err);
-    res.status(500).json({ success: false, error: "Internal server error" });
+    res.status(500).json("Internal server error");
   }
 });
 
@@ -51,15 +51,15 @@ app.post("/signup", async (req, res) => {
   try {
     const isExist = await User.findOne({ phoneNumber: phoneNumber });
     if (isExist) {
-      res.json({ success: false, message: "exists" });
+      res.json("exists");
       return;
     }
     // Create new user
     await User.create({ email, phoneNumber, password });
-    res.json({ success: true, message: "notexists" });
+    res.json("notexists");
   } catch (err) {
     console.log(err);
-    res.status(500).json({ success: false, error: "Internal server error" });
+    res.status(500).json("Internal server error");
   }
 });
 
