@@ -34,7 +34,7 @@ app.post("/", async (req, res) => {
 
     if (user.password === password) {
       //Successful login
-      res.json(user);
+      res.json({ status: "success", data: user });
     } else {
       res.json("notexist");
     }
