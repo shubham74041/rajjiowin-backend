@@ -28,19 +28,24 @@ app.post("/", async (req, res) => {
     const user = await User.findOne({ phoneNumber: phoneNumber });
     if (!user) {
       // User does not exist
-      // res.json({ success: false, message: "notexist" });
-      return;
+      return res.status(401).json({ message: "User not found" });
     }
 
     if (user.password === password) {
       //Successful login
-      res.json({ status: "success", data: user });
+      return res
+        .status(200)
+        .json({
+          token: "dancebasanti",
+          message: "Login successful",
+          data: user,
+        });
     } else {
-      res.json("notexist");
+      return res.status(401).json({ message: "Incorrect password" });
     }
   } catch (err) {
-    console.log(err);
-    res.status(500).json("Internal server error");
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
