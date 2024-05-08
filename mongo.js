@@ -4,7 +4,9 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const DBURL =
-  "mongodb+srv://piyush2909:X42h2Gmo2LvR7Uer@cluster1.yv0fibk.mongodb.net/?retryWrites=true&w=majorityappName=Cluster1";
+  "mongodb+srv://piyush2909:X42h2Gmo2LvR7Uer@cluster1.yv0fibk.mongodb.net/test?retryWrites=true&w=majority";
+
+// mongodb+srv://piyush2909:X42h2Gmo2LvR7Uer@cluster1.yv0fibk.mongodb.net/project-data?retryWrites=true&w=majority
 
 // Connect to MongoDB
 main()
@@ -49,4 +51,52 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-module.exports = User;
+// Define recharge Schema
+const rechargeSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+  },
+  rechargeAmount: {
+    type: Number,
+    required: true,
+  },
+  paid: {
+    type: Boolean,
+    default: false, // Assuming recharge is unpaid by default
+  },
+});
+
+const Recharge = mongoose.model("Recharge", rechargeSchema);
+
+// Define wallet schema
+// const walletSchema = new mongoose.Schema({
+//   userId: {
+//     type: Schema.Types.ObjectId,
+//     ref: "User",
+//   },
+//   userTotalAmount: {
+//     type: Number,
+//     required: true,
+//   },
+//   remainingBalance: {
+//     type: Number,
+//     required: true,
+//   },
+//   purchasingAmount: {
+//     type: Number,
+//     required: true,
+//   },
+//   totalPurchasingAmount: {
+//     type: Number,
+//     required: true,
+//   },
+// });
+
+// const Wallet = mongoose.model("Wallet", walletSchema);
+
+module.exports = {
+  User,
+  Recharge,
+  // Wallet,
+};
