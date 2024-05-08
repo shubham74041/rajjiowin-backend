@@ -21,31 +21,31 @@ app.use(cors());
 // });
 
 // Login endpoint
-// app.post("/", async (req, res) => {
-//   const { phoneNumber, password } = req.body;
+app.post("/", async (req, res) => {
+  const { phoneNumber, password } = req.body;
 
-//   try {
-//     const user = await User.findOne({ phoneNumber: phoneNumber });
-//     if (!user) {
-//       // User does not exist
-//       return res.status(401).json({ message: "User not found" });
-//     }
+  try {
+    const user = await User.findOne({ phoneNumber: phoneNumber });
+    if (!user) {
+      // User does not exist
+      return res.status(401).json({ message: "User not found" });
+    }
 
-//     if (user.password === password) {
-//       //Successful login
-//       return res.status(200).json({
-//         token: "dancebasanti",
-//         message: "Login successful",
-//         data: user,
-//       });
-//     } else {
-//       return res.status(401).json({ message: "Incorrect password" });
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// });
+    if (user.password === password) {
+      //Successful login
+      return res.status(200).json({
+        token: "dancebasanti",
+        message: "Login successful",
+        data: user,
+      });
+    } else {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 // Signup endpoint
 app.post("/signup", async (req, res) => {
