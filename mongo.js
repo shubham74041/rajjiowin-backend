@@ -70,33 +70,49 @@ const rechargeSchema = new mongoose.Schema({
 const Recharge = mongoose.model("Recharge", rechargeSchema);
 
 // Define wallet schema
-// const walletSchema = new mongoose.Schema({
+const walletSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+  },
+  userTotalAmount: {
+    type: Number,
+    required: true,
+  },
+  remainingBalance: {
+    type: Number,
+    required: true,
+  },
+  purchasingAmount: {
+    type: Number,
+    required: true,
+  },
+  totalPurchasingAmount: {
+    type: Number,
+    required: true,
+  },
+});
+
+const Wallet = mongoose.model("Wallet", walletSchema);
+
+// product buy schema
+// const productBuySchema = new mongoose.Schema({
 //   userId: {
-//     type: Schema.Types.ObjectId,
-//     ref: "User",
+//     type: String,
+//     required: true,
 //   },
-//   userTotalAmount: {
+//   walletAmount: {
 //     type: Number,
 //     required: true,
 //   },
-//   remainingBalance: {
-//     type: Number,
-//     required: true,
-//   },
-//   purchasingAmount: {
-//     type: Number,
-//     required: true,
-//   },
-//   totalPurchasingAmount: {
+//   productPrice: {
 //     type: Number,
 //     required: true,
 //   },
 // });
 
-// const Wallet = mongoose.model("Wallet", walletSchema);
-
 module.exports = {
   User,
   Recharge,
-  // Wallet,
+  Wallet,
 };
