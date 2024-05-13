@@ -111,8 +111,48 @@ const Wallet = mongoose.model("Wallet", walletSchema);
 //   },
 // });
 
+// All Products details Schema
+
+const productDetailsSchema = new mongoose.Schema({
+  // id: 1,
+  // title: "Plan A",
+  // price: 550,
+  // dailyIncome: 15.5,
+  // totalAmount: 1155,
+  // cycle: "75 days",
+
+  id: {
+    type: Number,
+    required: true,
+    unique: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  dailyIncome: {
+    type: Number,
+    required: true,
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+  },
+  cycle: {
+    type: String,
+    required: true,
+  },
+});
+
+const Products = mongoose.model("Products", productDetailsSchema);
+
 module.exports = {
   User,
   Recharge,
   Wallet,
+  Products,
 };

@@ -149,11 +149,63 @@ app.post("/recharge-data/:id", async (req, res) => {
   }
 });
 
-// exerting wallet data
-// app.get("/login", async (req, res) => {
-//   const phoneNumber = req.body;
-//   console.log(phoneNumber);
-// });
+// GET call for wallet data
+app.get("/:id", async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const data = await Wallet.findOne({ userId: userId });
+    if (!data) {
+      // If no wallet data is found for the provided userId, send a 404 response
+      return res.status(404).json({ error: "Wallet data not found" });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching wallet data:", error);
+    res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
+  }
+});
+
+// api call for wallet data
+app.post("/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  console.log("Body data", req.body);
+  const { price } = req.body;
+  console.log(userId);
+
+  try {
+    // Assuming Wallet is your Mongoose model
+    const walletData = await Wallet.findOne({ userId: userId });
+    console.log("wallet data", walletData);
+
+    if (walletData.remainingBalance > price) {
+      const restBalance = walletData.remainingBalance - parseFloat(price);
+      const updatedWallet = {
+        remainingBalance: parseFloat(restBalance),
+        purchasingAmount: parseFloat(price),
+        totalPurchasingAmount:
+          walletData.totalPurchasingAmount + parseFloat(price),
+      };
+
+      // Use the document _id for findByIdAndUpdate
+      const newData = await Wallet.findByIdAndUpdate(
+        walletData._id, // Use _id field as the document ID
+        updatedWallet,
+        { new: true } // Return the updated document
+      );
+      console.log("new Data", newData);
+
+      // Send the updated wallet data as a JSON response
+      res.json({ msg: "Product purchased successfully!" });
+    } else {
+      // If userTotalAmount is not greater than 100, send an error response
+      res.json({ msg: "Insufficient funds! Please recharge your wallet." });
+    }
+  } catch (error) {
+    console.error("Error fetching wallet data:", error);
+    res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
+  }
+});
 
 // Listen on dynamically assigned port by Vercel
 const port = process.env.PORT || 8080;
