@@ -150,9 +150,67 @@ const productDetailsSchema = new mongoose.Schema({
 
 const Products = mongoose.model("Products", productDetailsSchema);
 
+// //Withdraw Schema
+// userId,
+// withdrawalAmount,
+// paymentMethod,
+// bankName,
+// AccountNumber,
+// AccountHolderName,
+// IFSCCode,
+// upiId
+const withdrawSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+  },
+  withdrawalAmount: {
+    type: Number,
+    required: true,
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["bank", "upi"],
+    required: true,
+  },
+  bankName: {
+    type: String,
+    required: function () {
+      return this.paymentMethod === "bank";
+    },
+  },
+  accountNumber: {
+    type: String,
+    required: function () {
+      return this.paymentMethod === "bank";
+    },
+  },
+  accountHolderName: {
+    type: String,
+    required: function () {
+      return this.paymentMethod === "bank";
+    },
+  },
+  IFSCCode: {
+    type: String,
+    required: function () {
+      return this.paymentMethod === "bank";
+    },
+  },
+  upiId: {
+    type: String,
+    required: function () {
+      return this.paymentMethod === "upi";
+    },
+  },
+});
+
+const Withdraw = mongoose.model("Withdraw", withdrawSchema);
+
 module.exports = {
   User,
   Recharge,
   Wallet,
   Products,
+  Withdraw,
 };

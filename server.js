@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { User, Recharge, Wallet } = require("./mongo.js");
+const { User, Recharge, Wallet, Withdraw } = require("./mongo.js");
 
 const app = express();
 
@@ -204,6 +204,46 @@ app.post("/:userId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching wallet data:", error);
     res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
+  }
+});
+
+//withdrawal api
+app.post("/withdrawal/:id", async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+  console.log("userId", id);
+  console.log("Withdrawal data", data);
+
+  let newData = {}; // Use 'let' instead of 'const'
+
+  if (data.method === "bank") {
+    newData = {
+      userId: id,
+      withdrawalAmount: data.withdrawalAmount,
+      paymentMethod: data.method,
+      bankName: data.bankName,
+      accountNumber: data.accountNumber,
+      accountHolderName: data.accountHolderName,
+      IFSCCode: data.ifscCode, // Ensure 'ifscCode' matches the incoming field name
+    };
+  } else {
+    newData = {
+      userId: id,
+      withdrawalAmount: data.withdrawalAmount,
+      paymentMethod: data.method,
+      upiId: data.upiId,
+    };
+  }
+
+  try {
+    const newWithdrawal = await Withdraw.create(newData);
+    console.log("Withdrawal data:", newWithdrawal);
+    res.status(201).send(newWithdrawal);
+  } catch (error) {
+    console.error("Error creating withdrawal:", error);
+    res
+      .status(500)
+      .send({ error: "An error occurred while processing the withdrawal." });
   }
 });
 
