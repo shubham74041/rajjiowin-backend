@@ -212,7 +212,7 @@ app.post("/withdrawal/:id", async (req, res) => {
   const id = req.params.id;
   const data = req.body;
   console.log("userId", id);
-  console.log("Withdrawal data", data);
+  // console.log("Withdrawal data", data);
 
   let newData = {}; // Use 'let' instead of 'const'
 
@@ -237,13 +237,27 @@ app.post("/withdrawal/:id", async (req, res) => {
 
   try {
     const newWithdrawal = await Withdraw.create(newData);
-    console.log("Withdrawal data:", newWithdrawal);
+    // console.log("Withdrawal data:", newWithdrawal);
     res.status(201).send(newWithdrawal);
   } catch (error) {
     console.error("Error creating withdrawal:", error);
     res
       .status(500)
       .send({ error: "An error occurred while processing the withdrawal." });
+  }
+});
+
+//WithdrawData
+app.get("/withdraw-data/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log("userId", id);
+  try {
+    const data = await Withdraw.find({ userId: id });
+    // console.log("Withdrawal data:", data);
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("Internal server error");
   }
 });
 

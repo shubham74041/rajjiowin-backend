@@ -203,6 +203,10 @@ const withdrawSchema = new mongoose.Schema({
       return this.paymentMethod === "upi";
     },
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 const Withdraw = mongoose.model("Withdraw", withdrawSchema);
