@@ -96,20 +96,38 @@ const walletSchema = new mongoose.Schema({
 const Wallet = mongoose.model("Wallet", walletSchema);
 
 // product buy schema
-// const productBuySchema = new mongoose.Schema({
-//   userId: {
-//     type: String,
-//     required: true,
-//   },
-//   walletAmount: {
-//     type: Number,
-//     required: true,
-//   },
-//   productPrice: {
-//     type: Number,
-//     required: true,
-//   },
-// });
+const productBuySchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+  },
+
+  productTitle: {
+    type: String,
+    required: true,
+  },
+  productPrice: {
+    type: Number,
+    required: true,
+  },
+  productDailyIncome: {
+    type: Number,
+    required: true,
+  },
+  productTotalAmount: {
+    type: Number,
+    required: true,
+  },
+  productCycle: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+});
+const BuysProducts = mongoose.model("BuysProducts", productBuySchema);
 
 // All Products details Schema
 
@@ -150,15 +168,7 @@ const productDetailsSchema = new mongoose.Schema({
 
 const Products = mongoose.model("Products", productDetailsSchema);
 
-// //Withdraw Schema
-// userId,
-// withdrawalAmount,
-// paymentMethod,
-// bankName,
-// AccountNumber,
-// AccountHolderName,
-// IFSCCode,
-// upiId
+// Withdraw Schema
 const withdrawSchema = new mongoose.Schema({
   userId: {
     type: String,
@@ -217,4 +227,5 @@ module.exports = {
   Wallet,
   Products,
   Withdraw,
+  BuysProducts,
 };

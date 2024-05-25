@@ -1,6 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const { User, Recharge, Wallet, Withdraw } = require("./mongo.js");
+const {
+  User,
+  Recharge,
+  Wallet,
+  Withdraw,
+  BuysProducts,
+} = require("./mongo.js");
 
 const app = express();
 
@@ -170,8 +176,18 @@ app.get("/:id", async (req, res) => {
 app.post("/:userId", async (req, res) => {
   const userId = req.params.userId;
   console.log("Body data", req.body);
-  const { price } = req.body;
+  const { price, cardData } = req.body;
   console.log(userId);
+
+  const buyData = {
+    userId: userId,
+    id: cardData.id,
+    productTitle: cardData.title,
+    productPrice: cardData.price,
+    productDailyIncome: cardData.dailyIncome,
+    productTotalAmount: cardData.totalAmount,
+    productCycle: cardData.cycle,
+  };
 
   try {
     // Assuming Wallet is your Mongoose model
@@ -193,7 +209,9 @@ app.post("/:userId", async (req, res) => {
         updatedWallet,
         { new: true } // Return the updated document
       );
+      const newBuy = await BuysProducts.create(buyData);
       console.log("new Data", newData);
+      console.log("new Buy", newBuy);
 
       // Send the updated wallet data as a JSON response
       res.json({ msg: "Product purchased successfully!" });
@@ -255,6 +273,20 @@ app.get("/withdraw-data/:id", async (req, res) => {
     const data = await Withdraw.find({ userId: id });
     // console.log("Withdrawal data:", data);
     res.json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("Internal server error");
+  }
+});
+
+//products
+app.get("/order/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log("userId", id);
+  try {
+    const buyDatas = await BuysProducts.find({ userId: id });
+    console.log("Withdrawal data:", buyDatas);
+    res.json(buyDatas);
   } catch (err) {
     console.log(err);
     res.status(500).json("Internal server error");
