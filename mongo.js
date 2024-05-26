@@ -53,8 +53,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 const referralSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  referralCode: { type: String, required: true },
+  referralCode: { type: String, required: true, unique: true },
 });
 
 const Referral = mongoose.model("Referral", referralSchema);

@@ -68,20 +68,18 @@ app.post("/", async (req, res) => {
 
 // Referral code endpoint
 app.post("/referral", async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ message: "Email is required" });
-  }
-
   try {
-    let referral = await Referral.findOne({ email });
-
-    if (!referral) {
-      const referralCode = generateReferralCode();
-      referral = new Referral({ email, referralCode });
-      await referral.save();
+    const referralCode = generateReferralCode();
+    console.log(referralCode);
+    // Ensure the referral code is unique
+    let existingReferral = await Referral.findOne({ referralCode });
+    while (existingReferral) {
+      referralCode = generateReferralCode();
+      existingReferral = await Referral.findOne({ referralCode });
     }
+
+    const referral = new Referral({ referralCode });
+    await referral.save();
 
     res.json({ referralCode: referral.referralCode });
   } catch (error) {
@@ -89,8 +87,6 @@ app.post("/referral", async (req, res) => {
     res.status(500).json({ message: "Failed to generate referral code" });
   }
 });
-
-// Generate a referral code
 const generateReferralCode = () => {
   return Math.random().toString(36).substr(2, 8).toUpperCase();
 };
@@ -210,46 +206,23 @@ app.get("/:id", async (req, res) => {
 app.post("/:userId", async (req, res) => {
   const userId = req.params.userId;
   console.log("Body data", req.body);
-
   const { price, cardData } = req.body;
   console.log(userId);
 
-  // Check if cardData exists
-  if (!cardData) {
-    return res.status(400).json({ message: "Card data is required" });
-  }
-
-  // Check if all required fields in cardData are present
-  const {
-    id,
-    title,
-    price: cardPrice,
-    dailyIncome,
-    totalAmount,
-    cycle,
-  } = cardData;
-  if (!id || !title || !cardPrice || !dailyIncome || !totalAmount || !cycle) {
-    return res.status(400).json({ message: "Incomplete card data" });
-  }
-
   const buyData = {
     userId: userId,
-    id: id,
-    productTitle: title,
-    productPrice: cardPrice,
-    productDailyIncome: dailyIncome,
-    productTotalAmount: totalAmount,
-    productCycle: cycle,
+    // id: cardData.id,
+    productTitle: cardData.title,
+    productPrice: cardData.price,
+    productDailyIncome: cardData.dailyIncome,
+    productTotalAmount: cardData.totalAmount,
+    productCycle: cardData.cycle,
   };
 
   try {
     // Assuming Wallet is your Mongoose model
     const walletData = await Wallet.findOne({ userId: userId });
     console.log("wallet data", walletData);
-
-    if (!walletData) {
-      return res.status(404).json({ message: "Wallet not found" });
-    }
 
     if (walletData.remainingBalance > price) {
       const restBalance = walletData.remainingBalance - parseFloat(price);
@@ -266,7 +239,6 @@ app.post("/:userId", async (req, res) => {
         updatedWallet,
         { new: true } // Return the updated document
       );
-
       const newBuy = await BuysProducts.create(buyData);
       console.log("new Data", newData);
       console.log("new Buy", newBuy);
