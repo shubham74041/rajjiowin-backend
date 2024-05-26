@@ -1,11 +1,13 @@
 const express = require("express");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 const {
   User,
   Recharge,
   Wallet,
   Withdraw,
   BuysProducts,
+  Referral,
 } = require("./mongo.js");
 
 const app = express();
@@ -13,17 +15,10 @@ const app = express();
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cors());
 
 // Enable CORS for all routes
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
 
 // Root endpoint
 // app.get("/", async (req, res) => {
@@ -71,9 +66,39 @@ app.post("/", async (req, res) => {
   }
 });
 
+// Referral code endpoint
+app.post("/referral", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    let referral = await Referral.findOne({ email });
+
+    if (!referral) {
+      const referralCode = generateReferralCode();
+      referral = new Referral({ email, referralCode });
+      await referral.save();
+    }
+
+    res.json({ referralCode: referral.referralCode });
+  } catch (error) {
+    console.error("Error generating referral code:", error);
+    res.status(500).json({ message: "Failed to generate referral code" });
+  }
+});
+
+// Generate a referral code
+const generateReferralCode = () => {
+  return Math.random().toString(36).substr(2, 8).toUpperCase();
+};
+
 // Signup endpoint
+// Handle signup with referral code
 app.post("/signup", async (req, res) => {
-  const { email, phoneNumber, password } = req.body;
+  const { email, phoneNumber, password, referralCode } = req.body;
 
   try {
     const isExist = await User.findOne({ phoneNumber: phoneNumber });
@@ -81,16 +106,15 @@ app.post("/signup", async (req, res) => {
       res.json("exists");
       return;
     }
-    // Create new user
-    await User.create({ email, phoneNumber, password });
+
+    // Create new user with the provided referral code or generate a new one
+    await User.create({ email, phoneNumber, password, referralCode });
     res.json("notexists");
   } catch (err) {
     console.log(err);
     res.status(500).json("Internal server error");
   }
 });
-
-//
 
 // recharge api
 app.post("/recharge", async (req, res) => {
@@ -182,82 +206,82 @@ app.get("/:id", async (req, res) => {
   }
 });
 
-// // api call for wallet data
-// app.post("/:userId", async (req, res) => {
-//   const userId = req.params.userId;
-//   console.log("Body data", req.body);
+// api call for wallet data
+app.post("/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  console.log("Body data", req.body);
 
-//   const { price, cardData } = req.body;
-//   console.log(userId);
+  const { price, cardData } = req.body;
+  console.log(userId);
 
-//   // Check if cardData exists
-//   if (!cardData) {
-//     return res.status(400).json({ message: "Card data is required" });
-//   }
+  // Check if cardData exists
+  if (!cardData) {
+    return res.status(400).json({ message: "Card data is required" });
+  }
 
-//   // Check if all required fields in cardData are present
-//   const {
-//     id,
-//     title,
-//     price: cardPrice,
-//     dailyIncome,
-//     totalAmount,
-//     cycle,
-//   } = cardData;
-//   if (!id || !title || !cardPrice || !dailyIncome || !totalAmount || !cycle) {
-//     return res.status(400).json({ message: "Incomplete card data" });
-//   }
+  // Check if all required fields in cardData are present
+  const {
+    id,
+    title,
+    price: cardPrice,
+    dailyIncome,
+    totalAmount,
+    cycle,
+  } = cardData;
+  if (!id || !title || !cardPrice || !dailyIncome || !totalAmount || !cycle) {
+    return res.status(400).json({ message: "Incomplete card data" });
+  }
 
-//   const buyData = {
-//     userId: userId,
-//     id: id,
-//     productTitle: title,
-//     productPrice: cardPrice,
-//     productDailyIncome: dailyIncome,
-//     productTotalAmount: totalAmount,
-//     productCycle: cycle,
-//   };
+  const buyData = {
+    userId: userId,
+    id: id,
+    productTitle: title,
+    productPrice: cardPrice,
+    productDailyIncome: dailyIncome,
+    productTotalAmount: totalAmount,
+    productCycle: cycle,
+  };
 
-//   try {
-//     // Assuming Wallet is your Mongoose model
-//     const walletData = await Wallet.findOne({ userId: userId });
-//     console.log("wallet data", walletData);
+  try {
+    // Assuming Wallet is your Mongoose model
+    const walletData = await Wallet.findOne({ userId: userId });
+    console.log("wallet data", walletData);
 
-//     if (!walletData) {
-//       return res.status(404).json({ message: "Wallet not found" });
-//     }
+    if (!walletData) {
+      return res.status(404).json({ message: "Wallet not found" });
+    }
 
-//     if (walletData.remainingBalance > price) {
-//       const restBalance = walletData.remainingBalance - parseFloat(price);
-//       const updatedWallet = {
-//         remainingBalance: parseFloat(restBalance),
-//         purchasingAmount: parseFloat(price),
-//         totalPurchasingAmount:
-//           walletData.totalPurchasingAmount + parseFloat(price),
-//       };
+    if (walletData.remainingBalance > price) {
+      const restBalance = walletData.remainingBalance - parseFloat(price);
+      const updatedWallet = {
+        remainingBalance: parseFloat(restBalance),
+        purchasingAmount: parseFloat(price),
+        totalPurchasingAmount:
+          walletData.totalPurchasingAmount + parseFloat(price),
+      };
 
-//       // Use the document _id for findByIdAndUpdate
-//       const newData = await Wallet.findByIdAndUpdate(
-//         walletData._id, // Use _id field as the document ID
-//         updatedWallet,
-//         { new: true } // Return the updated document
-//       );
+      // Use the document _id for findByIdAndUpdate
+      const newData = await Wallet.findByIdAndUpdate(
+        walletData._id, // Use _id field as the document ID
+        updatedWallet,
+        { new: true } // Return the updated document
+      );
 
-//       const newBuy = await BuysProducts.create(buyData);
-//       console.log("new Data", newData);
-//       console.log("new Buy", newBuy);
+      const newBuy = await BuysProducts.create(buyData);
+      console.log("new Data", newData);
+      console.log("new Buy", newBuy);
 
-//       // Send the updated wallet data as a JSON response
-//       res.json({ msg: "Product purchased successfully!" });
-//     } else {
-//       // If userTotalAmount is not greater than 100, send an error response
-//       res.json({ msg: "Insufficient funds! Please recharge your wallet." });
-//     }
-//   } catch (error) {
-//     console.error("Error fetching wallet data:", error);
-//     res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
-//   }
-// });
+      // Send the updated wallet data as a JSON response
+      res.json({ msg: "Product purchased successfully!" });
+    } else {
+      // If userTotalAmount is not greater than 100, send an error response
+      res.json({ msg: "Insufficient funds! Please recharge your wallet." });
+    }
+  } catch (error) {
+    console.error("Error fetching wallet data:", error);
+    res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
+  }
+});
 
 //withdrawal api
 app.post("/withdrawal/:id", async (req, res) => {
@@ -330,81 +354,68 @@ app.get("/order/:id", async (req, res) => {
 //Check-in
 let userLastCheckIn = {}; // Store last check-in times for simplicity
 
-app.post("/order", async (req, res) => {
-  const userId = req.body.userId;
+// app.post("/order", async (req, res) => {
+//   const userId = req.body.userId;
 
-  console.log("User ID:", userId);
+//   console.log("User ID:", userId);
 
-  if (!userId) {
-    return res.status(400).json({ message: "User ID is required" });
-  }
-
-  const now = new Date();
-  const lastCheckIn = new Date(userLastCheckIn[userId] || 0); // Default to epoch
-
-  const timeSinceLastCheckIn = now - lastCheckIn;
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  if (timeSinceLastCheckIn < oneDay) {
-    console.log(`User ${userId} has already checked in today`);
-    return res
-      .status(200)
-      .json({ message: "Already checked in today", hasProducts: true });
-  }
-
-  try {
-    const orderData = await BuysProducts.find({ userId: userId });
-    const orderDataArray = orderData || [];
-
-    const wallet = await Wallet.findOne({ userId: userId });
-    const userHasProducts = orderDataArray.length > 0;
-
-    if (userHasProducts) {
-      userLastCheckIn[userId] = now;
-
-      // Calculate the total productDailyIncome from all orders
-      let totalDailyIncome = 0;
-      for (const order of orderDataArray) {
-        console.log("Order:", order.productDailyIncome); // Process each order as needed
-        totalDailyIncome += order.productDailyIncome;
-      }
-
-      // Add the totalDailyIncome to the remainingWalletAmount in walletData
-      if (wallet) {
-        wallet.remainingBalance += totalDailyIncome;
-        await wallet.save(); // Save the updated walletData to the database
-        console.log(`Wallet for user ${userId} updated successfully`);
-      } else {
-        console.log(`No wallet found for userId: ${userId}`);
-        return res.status(404).json({ message: "Wallet not found for user" });
-      }
-
-      return res
-        .status(200)
-        .json({ message: "Check-in complete", hasProducts: true });
-    } else {
-      return res
-        .status(200)
-        .json({ message: "You don't have any products", hasProducts: false });
-    }
-  } catch (error) {
-    console.error("Error processing order:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-// exports.getReferralCode = async (req, res) => {
-//   const { email } = req.body;
-//   try {
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//       return res.status(404).json({ error: "User not found" });
-//     }
-//     res.json({ referralCode: user.referralCode });
-//   } catch (error) {
-//     res.status(500).json({ error: "Server error" });
+//   if (!userId) {
+//     return res.status(400).json({ message: "User ID is required" });
 //   }
-// };
+
+//   const now = new Date();
+//   const lastCheckIn = new Date(userLastCheckIn[userId] || 0); // Default to epoch
+
+//   const timeSinceLastCheckIn = now - lastCheckIn;
+//   const oneDay = 24 * 60 * 60 * 1000;
+
+//   if (timeSinceLastCheckIn < oneDay) {
+//     console.log(`User ${userId} has already checked in today`);
+//     return res
+//       .status(200)
+//       .json({ message: "Already checked in today", hasProducts: true });
+//   }
+
+//   try {
+//     const orderData = await BuysProducts.find({ userId: userId });
+//     const orderDataArray = orderData || [];
+
+//     const wallet = await Wallet.findOne({ userId: userId });
+//     const userHasProducts = orderDataArray.length > 0;
+
+//     if (userHasProducts) {
+//       userLastCheckIn[userId] = now;
+
+//       // Calculate the total productDailyIncome from all orders
+//       let totalDailyIncome = 0;
+//       for (const order of orderDataArray) {
+//         console.log("Order:", order.productDailyIncome); // Process each order as needed
+//         totalDailyIncome += order.productDailyIncome;
+//       }
+
+//       // Add the totalDailyIncome to the remainingWalletAmount in walletData
+//       if (wallet) {
+//         wallet.remainingBalance += totalDailyIncome;
+//         await wallet.save(); // Save the updated walletData to the database
+//         console.log(`Wallet for user ${userId} updated successfully`);
+//       } else {
+//         console.log(`No wallet found for userId: ${userId}`);
+//         return res.status(404).json({ message: "Wallet not found for user" });
+//       }
+
+//       return res
+//         .status(200)
+//         .json({ message: "Check-in complete", hasProducts: true });
+//     } else {
+//       return res
+//         .status(200)
+//         .json({ message: "You don't have any products", hasProducts: false });
+//     }
+//   } catch (error) {
+//     console.error("Error processing order:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// });
 
 // Listen on dynamically assigned port by Vercel
 const port = process.env.PORT || 8080;
