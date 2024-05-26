@@ -327,6 +327,7 @@ app.get("/order/:id", async (req, res) => {
   }
 });
 
+//Check-in
 let userLastCheckIn = {}; // Store last check-in times for simplicity
 
 app.post("/order", async (req, res) => {
