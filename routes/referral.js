@@ -11,19 +11,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Enable CORS globally
-app.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://finance-king-pi.vercel.app"
-  ); // Update with your React app's domain
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-Requested-With, Content-Type"
-  );
-  next();
-});
+// Enable CORS with specific origin
+app.use(
+  cors({
+    origin: "https://finance-king-pi.vercel.app", // Update with your React app's domain
+  })
+);
 
 // Referral code endpoint
 router.post("/referral", async (req, res) => {
