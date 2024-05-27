@@ -133,7 +133,7 @@ const productBuySchema = new mongoose.Schema({
     default: Date.now(),
   },
 });
-const BuysProducts = mongoose.model("BuysProducts", productBuySchema);
+const BuyProduct = mongoose.model("BuysProducts", productBuySchema);
 
 // All Products details Schema
 
@@ -233,6 +233,6 @@ module.exports = {
   Wallet,
   Products,
   Withdraw,
-  BuysProducts,
+  BuyProduct,
   Referral,
 };

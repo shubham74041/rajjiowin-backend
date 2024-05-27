@@ -6,7 +6,7 @@ const {
   Recharge,
   Wallet,
   Withdraw,
-  BuysProducts,
+  BuyProduct,
   Referral,
 } = require("./mongo.js");
 
@@ -134,6 +134,86 @@ const generateReferralCode = () => {
   return Math.random().toString(36).substr(2, 8).toUpperCase();
 };
 
+// recharge api
+app.post("/recharge", async (req, res) => {
+  const { amount, phoneNumber } = req.body;
+  // const user = await User.findOne({ phoneNumber: phoneNumber });
+  console.log(amount, phoneNumber);
+  // console.log("User Data:", user);
+
+  const data = {
+    userId: phoneNumber,
+    rechargeAmount: Number(amount),
+  };
+  try {
+    await Recharge.create(data);
+    console.log("Recharge Data:", data);
+    res.json(data);
+  } catch (err) {
+    console.log("Error:", err);
+  }
+});
+
+app.get("/recharge-data", async (req, res) => {
+  try {
+    const userData = await Recharge.find({});
+    // console.log("User Data:", userData);
+    res.json(userData);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// get for admin
+
+// updating data
+app.post("/recharge-data/:id", async (req, res) => {
+  const id = req.params.id;
+  const { userId, rechargeAmount, paid } = req.body;
+  try {
+    const updatedData = await Recharge.findOneAndUpdate(
+      { _id: id },
+      { paid: paid },
+      { new: true }
+    );
+    console.log("New Updated Data:", updatedData);
+    if (updatedData.paid === true) {
+      const isUser = await Wallet.findOne({ userId: userId });
+      console.log("user", isUser);
+      if (!isUser) {
+        // If no user found, create a new wallet
+        const newWallet = {
+          userId: userId,
+          userTotalAmount: rechargeAmount,
+          remainingBalance: rechargeAmount,
+          purchasingAmount: 0,
+          totalPurchasingAmount: 0,
+        };
+        const newValue = await Wallet.create(newWallet);
+        console.log(newValue);
+      } else if (isUser.userId === updatedData.userId) {
+        const addWallet = {
+          userTotalAmount: isUser.userTotalAmount + rechargeAmount, // Access userTotalAmount from isUser
+          remainingBalance: isUser.remainingBalance + rechargeAmount,
+        };
+        const updatedWallet = await Wallet.findOneAndUpdate(
+          { userId: userId },
+          addWallet,
+          { new: true }
+        );
+        console.log(updatedWallet);
+      }
+    }
+
+    // console.log(updatedData);
+    res.status(200).send("Data updated successfully");
+  } catch (error) {
+    console.error("Error updating data:", error);
+    res.status(500).send("Internal server error");
+  }
+});
+
 // GET call for wallet data
 app.get("/:id", async (req, res) => {
   const userId = req.params.id;
@@ -186,7 +266,7 @@ app.post("/:userId", async (req, res) => {
         updatedWallet,
         { new: true }
       );
-      const newBuy = await BuysProducts.create(buyData);
+      const newBuy = await BuyProduct.create(buyData);
       console.log("new Data", newData);
       console.log("new Buy", newBuy);
 
@@ -226,7 +306,7 @@ app.post("/check-in/:userId", async (req, res) => {
   }
 
   try {
-    const orderData = await BuysProducts.find({ userId: userId });
+    const orderData = await BuyProduct.find({ userId: userId });
     const orderDataArray = orderData || [];
 
     const wallet = await Wallet.findOne({ userId: userId });
@@ -267,82 +347,6 @@ app.post("/check-in/:userId", async (req, res) => {
 });
 
 // recharge api
-app.post("/recharge", async (req, res) => {
-  const { amount, phoneNumber } = req.body;
-  // const user = await User.findOne({ phoneNumber: phoneNumber });
-  console.log(amount, phoneNumber);
-  // console.log("User Data:", user);
-
-  const data = {
-    userId: phoneNumber,
-    rechargeAmount: Number(amount),
-  };
-  try {
-    await Recharge.create(data);
-    res.json(data);
-  } catch (err) {
-    console.log("Error:", err);
-  }
-});
-
-// get for admin
-app.get("/recharge-data", async (req, res) => {
-  try {
-    const userData = await Recharge.find({});
-    console.log("User Data:", userData);
-    res.json(userData);
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-// updating data
-app.post("/recharge-data/:id", async (req, res) => {
-  const id = req.params.id;
-  const { userId, rechargeAmount, paid } = req.body;
-  try {
-    const updatedData = await Recharge.findOneAndUpdate(
-      { _id: id },
-      { paid: paid },
-      { new: true }
-    );
-    console.log("New Updated Data:", updatedData);
-    if (updatedData.paid === true) {
-      const isUser = await Wallet.findOne({ userId: userId });
-      console.log("user", isUser);
-      if (!isUser) {
-        // If no user found, create a new wallet
-        const newWallet = {
-          userId: userId,
-          userTotalAmount: rechargeAmount,
-          remainingBalance: rechargeAmount,
-          purchasingAmount: 0,
-          totalPurchasingAmount: 0,
-        };
-        const newValue = await Wallet.create(newWallet);
-        console.log(newValue);
-      } else if (isUser.userId === updatedData.userId) {
-        const addWallet = {
-          userTotalAmount: isUser.userTotalAmount + rechargeAmount, // Access userTotalAmount from isUser
-          remainingBalance: isUser.remainingBalance + rechargeAmount,
-        };
-        const updatedWallet = await Wallet.findOneAndUpdate(
-          { userId: userId },
-          addWallet,
-          { new: true }
-        );
-        console.log(updatedWallet);
-      }
-    }
-
-    // console.log(updatedData);
-    res.status(200).send("Data updated successfully");
-  } catch (error) {
-    console.error("Error updating data:", error);
-    res.status(500).send("Internal server error");
-  }
-});
 
 //withdrawal api
 app.post("/withdrawal/:id", async (req, res) => {
@@ -403,7 +407,7 @@ app.get("/order/:id", async (req, res) => {
   const id = req.params.id;
   console.log("userId", id);
   try {
-    const buyDatas = await BuysProducts.find({ userId: id });
+    const buyDatas = await BuyProduct.find({ userId: id });
     console.log("Withdrawal data:", buyDatas);
     res.json(buyDatas);
   } catch (err) {
