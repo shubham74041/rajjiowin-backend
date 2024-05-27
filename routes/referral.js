@@ -6,13 +6,24 @@ const { Referral } = require("../mongo.js");
 
 const app = express();
 
-//middlewares
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Enable CORS for all routes
-app.use(cors());
+// Enable CORS globally
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://finance-king-pi.vercel.app"
+  ); // Update with your React app's domain
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-Requested-With, Content-Type"
+  );
+  next();
+});
 
 // Referral code endpoint
 router.post("/referral", async (req, res) => {
@@ -28,16 +39,6 @@ router.post("/referral", async (req, res) => {
 
     const referral = new Referral({ referralCode });
     await referral.save();
-
-    res.setHeader(
-      "Access-Control-Allow-Origin",
-      "https://finance-king-pi.vercel.app"
-    ); // Update with your React app's domain
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "X-Requested-With, Content-Type"
-    );
 
     res.json({ referralCode: referral.referralCode });
   } catch (error) {
