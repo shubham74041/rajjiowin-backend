@@ -108,7 +108,6 @@ const productBuySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
   productTitle: {
     type: String,
     required: true,
