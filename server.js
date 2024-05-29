@@ -108,21 +108,35 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Referral code endpoint
 app.post("/referral", async (req, res) => {
   try {
-    const referralCode = generateReferralCode();
-    console.log(referralCode);
-    // Ensure the referral code is unique
-    let existingReferral = await Referral.findOne({ referralCode });
-    while (existingReferral) {
-      referralCode = generateReferralCode();
-      existingReferral = await Referral.findOne({ referralCode });
+    const { userId } = req.body;
+    // console.log(userId);
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
     }
 
-    const referral = new Referral({ referralCode });
-    await referral.save();
+    // Check if a referral code already exists for this user
+    let referral = await Referral.findOne({ userId });
 
+    if (!referral) {
+      // Generate a unique referral code
+      let referralCode = generateReferralCode();
+      let existingReferral = await Referral.findOne({ referralCode });
+
+      // Ensure the referral code is unique
+      while (existingReferral) {
+        referralCode = generateReferralCode();
+        existingReferral = await Referral.findOne({ referralCode });
+      }
+
+      // Save the new referral code
+      referral = new Referral({ userId, referralCode });
+      await referral.save();
+    }
+
+    // Return the referral code to the user
     res.json({ referralCode: referral.referralCode });
   } catch (error) {
     console.error("Error generating referral code:", error);
@@ -353,9 +367,8 @@ app.post("/withdrawal/:id", async (req, res) => {
   const id = req.params.id;
   const data = req.body;
   console.log("userId", id);
-  // console.log("Withdrawal data", data);
 
-  let newData = {}; // Use 'let' instead of 'const'
+  let newData = {};
 
   if (data.method === "bank") {
     newData = {
@@ -365,20 +378,49 @@ app.post("/withdrawal/:id", async (req, res) => {
       bankName: data.bankName,
       accountNumber: data.accountNumber,
       accountHolderName: data.accountHolderName,
-      IFSCCode: data.ifscCode, // Ensure 'ifscCode' matches the incoming field name
+      IFSCCode: data.ifscCode,
     };
-  } else {
+  } else if (data.method === "upi") {
     newData = {
       userId: id,
       withdrawalAmount: data.withdrawalAmount,
       paymentMethod: data.method,
       upiId: data.upiId,
     };
+  } else {
+    return res.status(400).send({ error: "Invalid payment method" });
   }
 
   try {
+    const orderHistory = await BuyProduct.find({ userId: id });
+    if (orderHistory.length === 0) {
+      return res.status(400).send({ error: "No order history found for user" });
+    }
+
     const newWithdrawal = await Withdraw.create(newData);
-    // console.log("Withdrawal data:", newWithdrawal);
+    console.log("Withdrawal data:", newWithdrawal);
+
+    const walletData = await Wallet.findOne({ userId: id });
+    if (!walletData) {
+      return res.status(404).send({ error: "Wallet not found for user" });
+    }
+
+    if (walletData.remainingBalance < data.withdrawalAmount) {
+      return res.status(400).send({ error: "Insufficient balance in wallet" });
+    }
+
+    const updateWallet = {
+      userTotalAmount: walletData.userTotalAmount - data.withdrawalAmount,
+      remainingBalance: walletData.remainingBalance - data.withdrawalAmount,
+    };
+
+    const updatedWallet = await Wallet.findOneAndUpdate(
+      { userId: id },
+      updateWallet,
+      { new: true }
+    );
+    console.log("Updated wallet data:", updatedWallet);
+
     res.status(201).send(newWithdrawal);
   } catch (error) {
     console.error("Error creating withdrawal:", error);
@@ -413,6 +455,143 @@ app.get("/order/:id", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json("Internal server error");
+  }
+});
+
+app.get("/financial/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log("userId", id);
+  try {
+    const data = await Recharge.find({ userId: id });
+    console.log("Recharge data:", data);
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("Internal server error");
+  }
+});
+
+//admin referral details
+app.get("/users/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log("userId", id);
+
+    const userData = await User.find({});
+    if (!userData || userData.length === 0) {
+      return res.status(404).json({ error: "Users not found" });
+    }
+    console.log("User data:", userData);
+
+    const results = [];
+
+    for (const user of userData) {
+      const userId = user.phoneNumber;
+      const referralId = await Referral.findOne({ userId: userId });
+      if (!referralId) {
+        console.log(`Referral not found for userId: ${userId}`);
+        continue; // Skip this user if referral data is not found
+      }
+      console.log("Referral data:", referralId);
+
+      const referralCode = referralId.referralCode;
+
+      const users = await User.find({ referralCode: referralCode });
+      const userCount = users.length;
+      console.log("Number of users:", userCount);
+
+      results.push({
+        userId: user.phoneNumber,
+        userPassword: user.password,
+        referralId: referralId.referralCode,
+        referralCount: userCount,
+      });
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error("Error fetching user details:", err);
+    res.status(500).json("Internal server error");
+  }
+});
+
+// admin user details
+app.get("/details-referral/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log("userId", id);
+
+    const userDataList = await User.find({});
+    if (!userDataList || userDataList.length === 0) {
+      return res.status(404).json({ error: "Users not found" });
+    }
+    console.log("User data:", userDataList);
+
+    const results = [];
+
+    for (const userData of userDataList) {
+      const referralId = await Referral.findOne({
+        userId: userData.phoneNumber,
+      });
+      if (!referralId) {
+        console.log(`Referral not found for userId: ${userData.phoneNumber}`);
+        continue; // Skip this user if referral data is not found
+      }
+      console.log("Referral data:", referralId);
+
+      const orderDetail = await BuyProduct.find({
+        userId: userData.phoneNumber,
+      });
+      const orderCount = orderDetail.length;
+      console.log("Order data:", orderCount);
+
+      results.push({
+        userId: userData.phoneNumber,
+        userPassword: userData.password,
+        referralId: referralId.referralCode,
+        orderCount: orderCount,
+      });
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error("Error fetching user details:", err);
+    res.status(500).json("Internal server error");
+  }
+});
+
+// add amount
+app.post("/users/:id", async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const id = req.params.id;
+    console.log("userId", id);
+    console.log(amount);
+
+    const walletAmount = await Wallet.findOne({ userId: id });
+    if (!walletAmount) {
+      return res.status(404).json({ error: "Wallet not found" });
+    }
+
+    console.log(walletAmount);
+
+    const updateWallet = {
+      userTotalAmount: walletAmount.userTotalAmount + amount,
+      remainingBalance: walletAmount.remainingBalance + amount,
+    };
+    const data = await Wallet.findOneAndUpdate({ userId: id }, updateWallet, {
+      new: true,
+    });
+
+    if (!data) {
+      return res.status(500).json({ error: "Error updating wallet" });
+    }
+
+    console.log(data);
+    res.json({ resMsg: "Amount added successfully" });
+  } catch (error) {
+    console.error("Error adding amount:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
