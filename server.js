@@ -489,30 +489,32 @@ app.get("/users/:id", async (req, res) => {
     for (const user of userData) {
       const userId = user.phoneNumber;
       const referralId = await Referral.findOne({ userId: userId });
-      if (!referralId) {
+
+      let referralCode = "";
+      let referralCount = 0;
+
+      if (referralId) {
+        referralCode = referralId.referralCode;
+        const referredUsers = await User.find({ referralCode: referralCode });
+        console.log("Referred users:", referredUsers);
+        referralCount = referredUsers.length;
+      } else {
         console.log(`Referral not found for userId: ${userId}`);
-        continue; // Skip this user if referral data is not found
       }
-      console.log("Referral data:", referralId);
-
-      const referralCode = referralId.referralCode;
-
-      const users = await User.find({ referralCode: referralCode });
-      const userCount = users.length;
-      console.log("Number of users:", userCount);
 
       results.push({
         userId: user.phoneNumber,
         userPassword: user.password,
-        referralId: referralId.referralCode,
-        referralCount: userCount,
+        referralId: referralCode,
+        referralCount: referralCount,
+        usedReferralCode: user.referralCode, // Add this line to include the referral code used by the user or a default message
       });
     }
 
-    res.json(results);
-  } catch (err) {
-    console.error("Error fetching user details:", err);
-    res.status(500).json("Internal server error");
+    return res.json(results);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -534,11 +536,6 @@ app.get("/details-referral/:id", async (req, res) => {
       const referralId = await Referral.findOne({
         userId: userData.phoneNumber,
       });
-      if (!referralId) {
-        console.log(`Referral not found for userId: ${userData.phoneNumber}`);
-        continue; // Skip this user if referral data is not found
-      }
-      console.log("Referral data:", referralId);
 
       const orderDetail = await BuyProduct.find({
         userId: userData.phoneNumber,
@@ -549,7 +546,7 @@ app.get("/details-referral/:id", async (req, res) => {
       results.push({
         userId: userData.phoneNumber,
         userPassword: userData.password,
-        referralId: referralId.referralCode,
+        referralId: referralId ? referralId.referralCode : "No referral code",
         orderCount: orderCount,
       });
     }
