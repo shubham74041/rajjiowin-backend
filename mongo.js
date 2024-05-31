@@ -228,6 +228,20 @@ const withdrawSchema = new mongoose.Schema({
 
 const Withdraw = mongoose.model("Withdraw", withdrawSchema);
 
+// Contact
+const contactSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true, match: /\S+@\S+\.\S+/ },
+  subject: { type: String, required: true },
+  message: { type: String, required: true },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+});
+const Contact = mongoose.model("Contact", contactSchema);
+
 module.exports = {
   User,
   Recharge,
@@ -236,4 +250,5 @@ module.exports = {
   Withdraw,
   BuyProduct,
   Referral,
+  Contact,
 };

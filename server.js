@@ -8,6 +8,7 @@ const {
   Withdraw,
   BuyProduct,
   Referral,
+  Contact,
 } = require("./mongo.js");
 
 const app = express();
@@ -592,6 +593,43 @@ app.post("/users/:id", async (req, res) => {
   } catch (error) {
     console.error("Error adding amount:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//Contact
+app.post("/contact/:id", async (req, res) => {
+  const userId = req.params.id;
+  const { name, email, subject, message } = req.body;
+  // console.log(id);
+  // console.log(data);
+
+  const newContact = new Contact({
+    userId,
+    name,
+    email,
+    subject,
+    message,
+  });
+
+  try {
+    await newContact.save();
+    console.log(newContact);
+    res.send("Message received");
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+app.get("/messages/:id", async (req, res) => {
+  try {
+    const data = await Contact.find({});
+    console.log(data);
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching messages." });
   }
 });
 
