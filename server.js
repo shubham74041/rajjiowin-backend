@@ -507,7 +507,7 @@ app.get("/users/:id", async (req, res) => {
         // console.log("Referred users:", referredUsers);
         referralCount = referredUsers.length;
       } else {
-        // console.log(`Referral not found for userId: ${userId}`);
+        console.log(`Referral not found for userId: ${userId}`);
       }
 
       results.push({
@@ -551,10 +551,17 @@ app.get("/details-referral/:id", async (req, res) => {
       const orderCount = orderDetail.length;
       // console.log("Order data:", orderCount);
 
+      let referralCode;
+      if (referralId) {
+        referralCode = referralId.referralCode;
+      } else {
+        referralCode = "No referral code";
+      }
+
       results.push({
         userId: userData.phoneNumber,
         userPassword: userData.password,
-        referralId: referralId ? referralId.referralCode : "No referral code",
+        referralId: referralCode,
         orderCount: orderCount,
       });
     }
