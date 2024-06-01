@@ -491,7 +491,6 @@ app.get("/users/:id", async (req, res) => {
     if (!userData || userData.length === 0) {
       return res.status(404).json({ error: "Users not found" });
     }
-    console.log("User data:", userData);
 
     const results = [];
 
@@ -505,7 +504,7 @@ app.get("/users/:id", async (req, res) => {
       if (referralId) {
         referralCode = referralId.referralCode;
         const referredUsers = await User.find({ referralCode: referralCode });
-        console.log("Referred users:", referredUsers);
+        // console.log("Referred users:", referredUsers);
         referralCount = referredUsers.length;
       } else {
         console.log(`Referral not found for userId: ${userId}`);
@@ -538,7 +537,7 @@ app.get("/details-referral/:id", async (req, res) => {
     if (!userDataList || userDataList.length === 0) {
       return res.status(404).json({ error: "Users not found" });
     }
-    console.log("User data:", userDataList);
+    // console.log("User data:", userDataList);
 
     const results = [];
 
@@ -551,7 +550,7 @@ app.get("/details-referral/:id", async (req, res) => {
         userId: userData.phoneNumber,
       });
       const orderCount = orderDetail.length;
-      console.log("Order data:", orderCount);
+      // console.log("Order data:", orderCount);
 
       results.push({
         userId: userData.phoneNumber,
