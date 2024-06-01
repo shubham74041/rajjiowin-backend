@@ -527,11 +527,9 @@ app.get("/users/:id", async (req, res) => {
 });
 
 // admin user details
-
 app.get("/details-referral/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    // console.log("userId", id);
 
     const userDataList = await User.find({});
     if (!userDataList || userDataList.length === 0) {
@@ -549,14 +547,10 @@ app.get("/details-referral/:id", async (req, res) => {
         userId: userData.phoneNumber,
       });
       const orderCount = orderDetail.length;
-      // console.log("Order data:", orderCount);
 
-      let referralCode;
-      if (referralId) {
-        referralCode = referralId.referralCode;
-      } else {
-        referralCode = "No referral code";
-      }
+      let referralCode = referralId
+        ? referralId.referralCode
+        : "No referral code";
 
       results.push({
         userId: userData.phoneNumber,
@@ -569,7 +563,7 @@ app.get("/details-referral/:id", async (req, res) => {
     res.json(results);
   } catch (err) {
     console.error("Error fetching user details:", err);
-    res.status(500).json("Internal server error");
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
