@@ -531,34 +531,33 @@ app.get("/users/:id", async (req, res) => {
 app.get("/details-referral/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    console.log("userId", id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    const userDataList = await User.find({});
+    const userDataList = await User.find({}).skip(skip).limit(limit);
     if (!userDataList || userDataList.length === 0) {
       return res.status(404).json({ error: "Users not found" });
     }
-    // console.log("User data:", userDataList);
 
-    const results = [];
+    const results = await Promise.all(
+      userDataList.map(async (userData) => {
+        const referralId = await Referral.findOne({
+          userId: userData.phoneNumber,
+        });
+        const orderDetail = await BuyProduct.find({
+          userId: userData.phoneNumber,
+        });
+        const orderCount = orderDetail.length;
 
-    for (const userData of userDataList) {
-      const referralId = await Referral.findOne({
-        userId: userData.phoneNumber,
-      });
-
-      const orderDetail = await BuyProduct.find({
-        userId: userData.phoneNumber,
-      });
-      const orderCount = orderDetail.length;
-      // console.log("Order data:", orderCount);
-
-      results.push({
-        userId: userData.phoneNumber,
-        userPassword: userData.password,
-        referralId: referralId ? referralId.referralCode : "No referral code",
-        orderCount: orderCount,
-      });
-    }
+        return {
+          userId: userData.phoneNumber,
+          userPassword: userData.password,
+          referralId: referralId ? referralId.referralCode : "No referral code",
+          orderCount: orderCount,
+        };
+      })
+    );
 
     res.json(results);
   } catch (err) {
