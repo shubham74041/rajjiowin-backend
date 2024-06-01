@@ -459,7 +459,7 @@ app.get("/order/:id", async (req, res) => {
   console.log("userId", id);
   try {
     const buyDatas = await BuyProduct.find({ userId: id });
-    console.log("Withdrawal data:", buyDatas);
+    // console.log("Withdrawal data:", buyDatas);
     res.json(buyDatas);
   } catch (err) {
     console.log(err);
@@ -472,7 +472,7 @@ app.get("/financial/:id", async (req, res) => {
   console.log("userId", id);
   try {
     const data = await Recharge.find({ userId: id });
-    console.log("Recharge data:", data);
+    // console.log("Recharge data:", data);
     res.json(data);
   } catch (err) {
     console.log(err);
@@ -507,7 +507,7 @@ app.get("/users/:id", async (req, res) => {
         // console.log("Referred users:", referredUsers);
         referralCount = referredUsers.length;
       } else {
-        console.log(`Referral not found for userId: ${userId}`);
+        // console.log(`Referral not found for userId: ${userId}`);
       }
 
       results.push({
@@ -537,7 +537,6 @@ app.get("/details-referral/:id", async (req, res) => {
     if (!userDataList || userDataList.length === 0) {
       return res.status(404).json({ error: "Users not found" });
     }
-    // console.log("User data:", userDataList);
 
     const results = [];
 
