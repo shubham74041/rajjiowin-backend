@@ -597,11 +597,22 @@ app.get("/details-referral/:id", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
 // add amount
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://finance-king-pi.vercel.app"
+  ); // Replace with your frontend's domain
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    // Handle preflight requests
+    res.status(200).end();
+  } else {
+    next();
+  }
+});
 app.post("/users/:id", async (req, res) => {
   try {
     const { amount } = req.body;
