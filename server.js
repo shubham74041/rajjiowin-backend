@@ -19,6 +19,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
+app.use(
+  cors({
+    origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
+    methods: "GET,POST", // Specify the allowed methods
+    credentials: true, // Allow credentials if needed
+  })
+);
+
 // Enable CORS for all routes
 
 // Root endpoint
@@ -519,6 +527,22 @@ app.get("/users/:id", async (req, res) => {
 });
 
 // admin user details
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://finance-king-pi.vercel.app"
+  ); // Replace with your frontend's domain
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    // Handle preflight requests
+    res.status(200).end();
+  } else {
+    next();
+  }
+});
+
 app.get("/details-referral/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -558,6 +582,10 @@ app.get("/details-referral/:id", async (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 // add amount
 app.post("/users/:id", async (req, res) => {
   try {
