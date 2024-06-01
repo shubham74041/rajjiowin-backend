@@ -481,21 +481,7 @@ app.get("/financial/:id", async (req, res) => {
 });
 
 //admin referral details
-app.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://finance-king-pi.vercel.app"
-  ); // Replace with your frontend's domain
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    // Handle preflight requests
-    res.status(200).end();
-  } else {
-    next();
-  }
-});
 app.get("/users/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -542,21 +528,6 @@ app.get("/users/:id", async (req, res) => {
 });
 
 // admin user details
-app.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://finance-king-pi.vercel.app"
-  ); // Replace with your frontend's domain
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    // Handle preflight requests
-    res.status(200).end();
-  } else {
-    next();
-  }
-});
 
 app.get("/details-referral/:id", async (req, res) => {
   try {
@@ -598,21 +569,7 @@ app.get("/details-referral/:id", async (req, res) => {
 });
 
 // add amount
-app.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://finance-king-pi.vercel.app"
-  ); // Replace with your frontend's domain
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    // Handle preflight requests
-    res.status(200).end();
-  } else {
-    next();
-  }
-});
 app.post("/users/:id", async (req, res) => {
   try {
     const { amount } = req.body;
