@@ -73,6 +73,10 @@ const rechargeSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // Assuming recharge is unpaid by default
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 const Recharge = mongoose.model("Recharge", rechargeSchema);
@@ -98,6 +102,10 @@ const walletSchema = new mongoose.Schema({
   totalPurchasingAmount: {
     type: Number,
     required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
   },
 });
 
@@ -219,6 +227,10 @@ const withdrawSchema = new mongoose.Schema({
     required: function () {
       return this.paymentMethod === "upi";
     },
+  },
+  paid: {
+    type: Boolean,
+    default: false, // Assuming recharge is unpaid by default
   },
   createdAt: {
     type: Date,

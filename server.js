@@ -453,6 +453,31 @@ app.get("/withdraw-data/:id", async (req, res) => {
   }
 });
 
+//WithdrawData
+app.post("/withdraw-data/:id", async (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body;
+  console.log(action);
+  console.log(id);
+
+  try {
+    // Find the document by id and update it
+    const result = await Withdraw.findByIdAndUpdate(
+      id,
+      { paid: action },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).send({ message: "Document not found" });
+    }
+    console.log(result);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
 //products
 app.get("/order/:id", async (req, res) => {
   const id = req.params.id;
@@ -469,11 +494,32 @@ app.get("/order/:id", async (req, res) => {
 
 app.get("/financial/:id", async (req, res) => {
   const id = req.params.id;
-  console.log("userId", id);
+  console.log("userId:", id);
   try {
-    const data = await Recharge.find({ userId: id });
-    // console.log("Recharge data:", data);
-    res.json(data);
+    const rechargeData = await Recharge.find({ userId: id });
+    const withdrawData = await Withdraw.find({ userId: id });
+
+    const results = [];
+
+    rechargeData.forEach((recharge) => {
+      results.push({
+        type: "recharge",
+        amount: recharge.rechargeAmount,
+        paid: recharge.paid,
+        date: recharge.createdAt,
+      });
+    });
+
+    withdrawData.forEach((withdraw) => {
+      results.push({
+        type: "withdraw",
+        amount: withdraw.withdrawalAmount,
+        paid: withdraw.paid,
+        date: withdraw.createdAt,
+      });
+    });
+
+    res.json(results);
   } catch (err) {
     console.log(err);
     res.status(500).json("Internal server error");
