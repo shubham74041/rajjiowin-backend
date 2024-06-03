@@ -538,36 +538,44 @@ app.get("/users/:id", async (req, res) => {
       return res.status(404).json({ error: "Users not found" });
     }
 
-    const results = [];
+    const results = await Promise.all(
+      userData.map(async (user) => {
+        const userId = user.phoneNumber;
 
-    for (const user of userData) {
-      const userId = user.phoneNumber;
-      const referralId = await Referral.findOne({ userId: userId });
+        // Fetch referral information concurrently
+        const referralPromise = Referral.findOne({ userId: userId });
 
-      let referralCode = "";
-      let referralCount = 0;
+        // Fetch order details concurrently
+        const orderDetailPromise = BuyProduct.find({ userId: userId });
 
-      if (referralId) {
-        referralCode = referralId.referralCode;
-        const referredUsers = await User.find({ referralCode: referralCode });
-        referralCount = referredUsers.length;
-      } else {
-        console.log(`Referral not found for userId: ${userId}`);
-      }
+        const [referralId, orderDetail] = await Promise.all([
+          referralPromise,
+          orderDetailPromise,
+        ]);
 
-      // Fetch order details and count
-      const orderDetail = await BuyProduct.find({ userId: userId });
-      const orderCount = orderDetail.length;
+        let referralCode = "";
+        let referralCount = 0;
 
-      results.push({
-        userId: user.phoneNumber,
-        userPassword: user.password,
-        referralId: referralCode,
-        referralCount: referralCount,
-        usedReferralCode: user.referralCode, // Include the referral code used by the user
-        orderCount: orderCount, // Include the order count
-      });
-    }
+        if (referralId) {
+          referralCode = referralId.referralCode;
+          const referredUsers = await User.find({ referralCode: referralCode });
+          referralCount = referredUsers.length;
+        } else {
+          console.log(`Referral not found for userId: ${userId}`);
+        }
+
+        const orderCount = orderDetail.length;
+
+        return {
+          userId: user.phoneNumber,
+          userPassword: user.password,
+          referralId: referralCode,
+          referralCount: referralCount,
+          usedReferralCode: user.referralCode, // Include the referral code used by the user
+          orderCount: orderCount, // Include the order count
+        };
+      })
+    );
 
     return res.json(results);
   } catch (error) {
