@@ -550,18 +550,22 @@ app.get("/users/:id", async (req, res) => {
       if (referralId) {
         referralCode = referralId.referralCode;
         const referredUsers = await User.find({ referralCode: referralCode });
-        // console.log("Referred users:", referredUsers);
         referralCount = referredUsers.length;
       } else {
         console.log(`Referral not found for userId: ${userId}`);
       }
+
+      // Fetch order details and count
+      const orderDetail = await BuyProduct.find({ userId: userId });
+      const orderCount = orderDetail.length;
 
       results.push({
         userId: user.phoneNumber,
         userPassword: user.password,
         referralId: referralCode,
         referralCount: referralCount,
-        usedReferralCode: user.referralCode, // Add this line to include the referral code used by the user or a default message
+        usedReferralCode: user.referralCode, // Include the referral code used by the user
+        orderCount: orderCount, // Include the order count
       });
     }
 
