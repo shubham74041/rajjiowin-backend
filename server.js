@@ -582,29 +582,29 @@ app.get("/details-referral/:id", async (req, res) => {
       return res.status(404).json({ error: "Users not found" });
     }
 
-    const results = [];
+    const results = await Promise.all(
+      userDataList.map(async (userData) => {
+        const referralId = await Referral.findOne({
+          userId: userData.phoneNumber,
+        });
 
-    for (const userData of userDataList) {
-      const referralId = await Referral.findOne({
-        userId: userData.phoneNumber,
-      });
+        const orderDetail = await BuyProduct.find({
+          userId: userData.phoneNumber,
+        });
+        const orderCount = orderDetail.length;
 
-      const orderDetail = await BuyProduct.find({
-        userId: userData.phoneNumber,
-      });
-      const orderCount = orderDetail.length;
+        let referralCode = referralId
+          ? referralId.referralCode
+          : "No referral code";
 
-      let referralCode = referralId
-        ? referralId.referralCode
-        : "No referral code";
-
-      results.push({
-        userId: userData.phoneNumber,
-        userPassword: userData.password,
-        referralId: referralCode,
-        orderCount: orderCount,
-      });
-    }
+        return {
+          userId: userData.phoneNumber,
+          userPassword: userData.password,
+          referralId: referralCode,
+          orderCount: orderCount,
+        };
+      })
+    );
 
     res.json(results);
   } catch (err) {
