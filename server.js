@@ -257,11 +257,8 @@ app.get("/:id", async (req, res) => {
 // api call for wallet data
 app.post("/:userId", async (req, res) => {
   const userId = req.params.userId;
-  console.log("Body data", req.body);
   const { price, cardData } = req.body;
-  console.log(userId);
 
-  // Remove the id field to prevent duplicate key error
   const buyData = {
     userId: userId,
     productTitle: cardData.title,
@@ -272,9 +269,16 @@ app.post("/:userId", async (req, res) => {
   };
 
   try {
-    const walletData = await Wallet.findOne({ userId: userId });
-    console.log("wallet data", walletData);
+    // Check if the user has already purchased the product
+    const existingPurchase = await BuyProduct.findOne({
+      userId: userId,
+      productTitle: cardData.title,
+    });
+    if (existingPurchase) {
+      return res.json({ msg: "You have already purchased this product." });
+    }
 
+    const walletData = await Wallet.findOne({ userId: userId });
     if (walletData.remainingBalance > price) {
       const restBalance = walletData.remainingBalance - parseFloat(price);
       const updatedWallet = {
@@ -283,15 +287,13 @@ app.post("/:userId", async (req, res) => {
         totalPurchasingAmount:
           walletData.totalPurchasingAmount + parseFloat(price),
       };
-      console.log(walletData._id);
+
       const newData = await Wallet.findByIdAndUpdate(
         walletData._id,
         updatedWallet,
         { new: true }
       );
       const newBuy = await BuyProduct.create(buyData);
-      console.log("new Data", newData);
-      console.log("new Buy", newBuy);
 
       res.json({ msg: "Product purchased successfully!" });
     } else {
