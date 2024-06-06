@@ -841,7 +841,7 @@ app.get("/referral/:id", async (req, res) => {
     const results = {
       count: referralCount || 0,
       totalReferralAmount: referralAmountData.referralAmount || 0,
-      lastAmount: referralAmountData.amount || 0,
+      lastAmount: referralAmountData.newAmount || 0,
     };
 
     res.json(results);
