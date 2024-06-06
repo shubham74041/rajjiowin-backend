@@ -264,6 +264,14 @@ const popupSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  timePeriod: {
+    type: Number,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // Create a model based on the schema
@@ -272,11 +280,19 @@ const Popup = mongoose.model("Popup", popupSchema);
 //Referral Amount
 const referralAmountSchema = new mongoose.Schema({
   userId: { type: String, required: true },
+  newAmount: {
+    type: Number,
+    required: true,
+  },
   referralAmount: {
     type: Number,
     required: true,
   },
   value: { type: Boolean, default: false },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 const ReferralAmount = mongoose.model("ReferralAmount", referralAmountSchema);

@@ -280,13 +280,13 @@ app.post("/new-product/:id", async (req, res) => {
 
 // POST route for handling custom popup data
 app.post("/custom-popup", async (req, res) => {
-  const { title, message } = req.body;
+  const { title, message, timePeriod } = req.body;
 
   try {
     // Update or insert the data
     const result = await Popup.updateMany(
       {},
-      { title, message },
+      { title, message, timePeriod },
       { upsert: true }
     );
 
@@ -566,6 +566,7 @@ app.get("/financial/:id", async (req, res) => {
   try {
     const rechargeData = await Recharge.find({ userId: id });
     const withdrawData = await Withdraw.find({ userId: id });
+    const ReferralData = await ReferralAmount.find({ userId: id });
 
     const results = [];
 
@@ -584,6 +585,15 @@ app.get("/financial/:id", async (req, res) => {
         amount: withdraw.withdrawalAmount,
         paid: withdraw.paid,
         date: withdraw.createdAt,
+      });
+    });
+
+    ReferralData.forEach((refer) => {
+      results.push({
+        type: "other",
+        amount: refer.newAmount,
+        paid: refer.value,
+        date: refer.createdAt,
       });
     });
 
@@ -741,6 +751,7 @@ app.post("/users/:id", async (req, res) => {
 
     if (referralData) {
       // Update existing referral data
+      referralData.newAmount = amount;
       referralData.referralAmount += amount;
       referralData.value = true;
       await referralData.save();
@@ -795,6 +806,60 @@ app.get("/messages/:id", async (req, res) => {
     res
       .status(500)
       .json({ error: "An error occurred while fetching messages." });
+  }
+});
+
+//Referral Show
+app.get("/referral/:id", async (req, res) => {
+  const userId = req.params.id;
+  console.log("Referral id:", userId);
+
+  try {
+    // Fetch referral amount data for the user
+    const referralAmountData = await ReferralAmount.findOne({ userId });
+    if (!referralAmountData) {
+      return res
+        .status(404)
+        .json({ error: "Referral amount data not found for the user." });
+    }
+
+    // Fetch referral data for the user
+    const referral = await Referral.findOne({ userId });
+    if (!referral) {
+      return res
+        .status(404)
+        .json({ error: "Referral data not found for the user." });
+    }
+
+    const referralCode = referral.referralCode;
+
+    // Fetch users referred by this referral code
+    const referralUsers = await User.find({ referralCode });
+    const referralCount = referralUsers.length;
+
+    // Create results object
+    const results = {
+      count: referralCount || 0,
+      totalReferralAmount: referralAmountData.referralAmount || 0,
+      lastAmount: referralAmountData.amount || 0,
+    };
+
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "An error occurred while fetching data." });
+  }
+});
+
+//Popup
+app.get("/", async (req, res) => {
+  try {
+    const data = await Popup.find({});
+    // console.log(data);
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
 
