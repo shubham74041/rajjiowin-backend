@@ -254,6 +254,33 @@ const contactSchema = new mongoose.Schema({
 });
 const Contact = mongoose.model("Contact", contactSchema);
 
+// Define a schema for storing titles and messages
+const popupSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  message: {
+    type: String,
+    required: true,
+  },
+});
+
+// Create a model based on the schema
+const Popup = mongoose.model("Popup", popupSchema);
+
+//Referral Amount
+const referralAmountSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  referralAmount: {
+    type: Number,
+    required: true,
+  },
+  value: { type: Boolean, default: false },
+});
+
+const ReferralAmount = mongoose.model("ReferralAmount", referralAmountSchema);
+
 module.exports = {
   User,
   Recharge,
@@ -263,4 +290,6 @@ module.exports = {
   BuyProduct,
   Referral,
   Contact,
+  Popup,
+  ReferralAmount,
 };

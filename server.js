@@ -9,6 +9,9 @@ const {
   BuyProduct,
   Referral,
   Contact,
+  Popup,
+  Products,
+  ReferralAmount,
 } = require("./mongo.js");
 
 const app = express();
@@ -233,6 +236,69 @@ app.post("/recharge-data/:id", async (req, res) => {
     res.status(200).send("Data updated successfully");
   } catch (error) {
     console.error("Error updating data:", error);
+    res.status(500).send("Internal server error");
+  }
+});
+
+//Edit Products
+app.get("/new-product", async (req, res) => {
+  try {
+    const productData = await Products.find({});
+    res.json(productData);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+//Edit Route
+app.post("/new-product/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+  // console.log(id);
+  // console.log(updatedData);
+
+  try {
+    const updatedProduct = await Products.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+
+    if (!updatedProduct) {
+      return res.status(404).send({ message: "Product not found" });
+    }
+
+    res.send({
+      message: "Product updated successfully!",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    res.status(500).send({ message: "Error updating product", error });
+  }
+});
+
+//custom popup
+
+// POST route for handling custom popup data
+app.post("/custom-popup", async (req, res) => {
+  const { title, message } = req.body;
+
+  try {
+    // Update or insert the data
+    const result = await Popup.updateMany(
+      {},
+      { title, message },
+      { upsert: true }
+    );
+
+    if (result.length > 0) {
+      console.log(`New popup created with title '${title}'`);
+      res.status(201).send("New popup created");
+    } else {
+      console.log(`Popup updated with title '${title}'`);
+      res.status(200).send("Popup updated successfully");
+    }
+  } catch (error) {
+    console.error("Error:", error);
     res.status(500).send("Internal server error");
   }
 });
@@ -547,16 +613,23 @@ app.get("/users/:id", async (req, res) => {
         // Fetch referral information concurrently
         const referralPromise = Referral.findOne({ userId: userId });
 
+        // Fetch referral amount information concurrently
+        const referralAmountPromise = ReferralAmount.findOne({
+          userId: userId,
+        });
+
         // Fetch order details concurrently
         const orderDetailPromise = BuyProduct.find({ userId: userId });
 
-        const [referralId, orderDetail] = await Promise.all([
+        const [referralId, referralAmount, orderDetail] = await Promise.all([
           referralPromise,
+          referralAmountPromise,
           orderDetailPromise,
         ]);
 
         let referralCode = "";
         let referralCount = 0;
+        let referralValue = ""; // Initialize referral value
 
         if (referralId) {
           referralCode = referralId.referralCode;
@@ -568,11 +641,17 @@ app.get("/users/:id", async (req, res) => {
 
         const orderCount = orderDetail.length;
 
+        // Check if referral amount data exists
+        if (referralAmount) {
+          referralValue = referralAmount.value;
+        }
+
         return {
           userId: user.phoneNumber,
           userPassword: user.password,
           referralId: referralCode,
           referralCount: referralCount,
+          referralValue: referralValue, // Include referral value in the results
           usedReferralCode: user.referralCode, // Include the referral code used by the user
           orderCount: orderCount, // Include the order count
         };
@@ -637,11 +716,12 @@ app.post("/users/:id", async (req, res) => {
     console.log(amount);
 
     const walletAmount = await Wallet.findOne({ userId: id });
+
     if (!walletAmount) {
       return res.status(404).json({ error: "Wallet not found" });
     }
 
-    console.log(walletAmount);
+    // console.log(walletAmount);
 
     const updateWallet = {
       userTotalAmount: walletAmount.userTotalAmount + amount,
@@ -656,6 +736,24 @@ app.post("/users/:id", async (req, res) => {
     }
 
     console.log(data);
+    // Add or update referral data
+    const referralData = await ReferralAmount.findOne({ userId: id });
+
+    if (referralData) {
+      // Update existing referral data
+      referralData.referralAmount += amount;
+      referralData.value = true;
+      await referralData.save();
+    } else {
+      // Create new referral data
+      const referralData = new ReferralAmount({
+        userId: id,
+        referralAmount: amount,
+        value: true,
+      });
+      await referralData.save();
+    }
+    // console.log("referral ", referralData);
     res.json({ resMsg: "Amount added successfully" });
   } catch (error) {
     console.error("Error adding amount:", error);
