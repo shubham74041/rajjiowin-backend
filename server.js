@@ -120,6 +120,50 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+//edit password
+app.post("/password/:id", async (req, res) => {
+  const { newPassword } = req.body;
+  const { id } = req.params;
+  console.log(newPassword, id);
+  try {
+    const updatePassword = await User.findOneAndUpdate(
+      { phoneNumber: id },
+      { password: newPassword },
+      { new: true }
+    );
+    // console.log(updatePassword);
+    res.json({ resMsg: "Password updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Internal server error");
+  }
+});
+
+// Account Delete
+app.post("/delete-account/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleteAccount = await User.findOneAndDelete({ phoneNumber: id });
+    const deleteReferral = await Referral.findOneAndDelete({ userId: id });
+    const deleteRecharge = await Recharge.findOneAndDelete({ userId: id });
+    const deleteRechargeData = await BuyProduct.findOneAndDelete({
+      userId: id,
+    });
+    const deleteWithdraw = await Withdraw.findOneAndDelete({ userId: id });
+    const deleteWithdrawData = await Contact.findOneAndDelete({ userId: id });
+    const deleteWallet = await Wallet.findOneAndDelete({ userId: id });
+    const deleteReferralAmount = await ReferralAmount.findOneAndDelete({
+      userId: id,
+    });
+
+    res.json({ resMsg: "Account deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Internal server error");
+  }
+});
+
+//referral
 app.post("/referral", async (req, res) => {
   try {
     const { userId } = req.body;
@@ -373,6 +417,7 @@ app.post("/:userId", async (req, res) => {
 
 //Check-in
 let userLastCheckIn = {}; // Store last check-in times for simplicity
+let userLastPurchase = {}; // Store last purchase times for simplicity
 
 app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
@@ -383,57 +428,71 @@ app.post("/check-in/:userId", async (req, res) => {
     return res.status(400).json({ message: "User ID is required" });
   }
 
-  const now = new Date();
-  const lastCheckIn = new Date(userLastCheckIn[userId] || 0); // Default to epoch
-
-  const timeSinceLastCheckIn = now - lastCheckIn;
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  if (timeSinceLastCheckIn < oneDay) {
-    console.log(`User ${userId} has already checked in today`);
-    return res
-      .status(200)
-      .json({ message: "Already checked in today", hasProducts: true });
-  }
-
   try {
     const orderData = await BuyProduct.find({ userId: userId });
-    const orderDataArray = orderData || [];
-
     const wallet = await Wallet.findOne({ userId: userId });
-    const userHasProducts = orderDataArray.length > 0;
 
-    if (userHasProducts) {
-      userLastCheckIn[userId] = now;
-
-      // Calculate the total productDailyIncome from all orders
-      let totalDailyIncome = 0;
-      for (const order of orderDataArray) {
-        console.log("Order:", order.productDailyIncome); // Process each order as needed
-        totalDailyIncome += order.productDailyIncome;
-      }
-
-      // Add the totalDailyIncome to the remainingWalletAmount in walletData
-      if (wallet) {
-        wallet.remainingBalance += totalDailyIncome;
-        await wallet.save(); // Save the updated walletData to the database
-        console.log(`Wallet for user ${userId} updated successfully`);
-      } else {
-        console.log(`No wallet found for userId: ${userId}`);
-        return res.status(404).json({ message: "Wallet not found for user" });
-      }
-
-      return res
-        .status(200)
-        .json({ message: "Check-in complete", hasProducts: true });
-    } else {
+    if (orderData.length === 0) {
       return res
         .status(200)
         .json({ message: "You don't have any products", hasProducts: false });
     }
+
+    const lastPurchase = new Date(userLastPurchase[userId] || 0); // Last purchase time for the user
+
+    // Update last purchase time
+    userLastPurchase[userId] = new Date();
+
+    // Calculate totalDailyIncome from all orders
+    let totalDailyIncome = 0;
+    for (const order of orderData) {
+      console.log("Order:", order.productDailyIncome);
+      totalDailyIncome += order.productDailyIncome;
+    }
+
+    // Update wallet balance
+    if (wallet) {
+      wallet.remainingBalance += totalDailyIncome;
+      await wallet.save();
+      console.log(`Wallet for user ${userId} updated successfully`);
+    } else {
+      console.log(`No wallet found for userId: ${userId}`);
+      return res.status(404).json({ message: "Wallet not found for user" });
+    }
+
+    return res.status(200).json({
+      message: "Check-in complete",
+      hasProducts: true,
+      walletBalance: wallet.remainingBalance,
+    });
   } catch (error) {
-    console.error("Error processing order:", error);
+    console.error("Error processing check-in:", error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//
+app.post("/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const { price, cardData } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    await BuyProduct.create({ userId, ...cardData });
+
+    // Update user's last purchase date
+    userLastPurchase[userId] = new Date();
+
+    res.status(200).json({ msg: "Product purchased successfully!" });
+  } catch (error) {
+    console.error("Error processing purchase:", error);
+    res
+      .status(500)
+      .json({ msg: "Error processing your purchase. Please try again later." });
   }
 });
 
