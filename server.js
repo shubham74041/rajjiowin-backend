@@ -145,12 +145,12 @@ app.post("/delete-account/:id", async (req, res) => {
   try {
     const deleteAccount = await User.findOneAndDelete({ phoneNumber: id });
     const deleteReferral = await Referral.findOneAndDelete({ userId: id });
-    const deleteRecharge = await Recharge.findOneAndDelete({ userId: id });
-    const deleteRechargeData = await BuyProduct.findOneAndDelete({
+    const deleteRecharge = await Recharge.deleteMany({ userId: id });
+    const deleteRechargeData = await BuyProduct.deleteMany({
       userId: id,
     });
-    const deleteWithdraw = await Withdraw.findOneAndDelete({ userId: id });
-    const deleteWithdrawData = await Contact.findOneAndDelete({ userId: id });
+    const deleteWithdraw = await Withdraw.deleteMany({ userId: id });
+    const deleteWithdrawData = await Contact.deleteMany({ userId: id });
     const deleteWallet = await Wallet.findOneAndDelete({ userId: id });
     const deleteReferralAmount = await ReferralAmount.findOneAndDelete({
       userId: id,
