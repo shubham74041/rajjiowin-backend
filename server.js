@@ -571,7 +571,7 @@ app.get("/withdraw-data/:id", async (req, res) => {
   const id = req.params.id;
   console.log("userId", id);
   try {
-    const data = await Withdraw.find({ userId: id });
+    const data = await Withdraw.find({});
     // console.log("Withdrawal data:", data);
     res.json(data);
   } catch (err) {
