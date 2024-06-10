@@ -698,7 +698,7 @@ app.get("/users/:id", async (req, res) => {
 
         let referralCode = "";
         let referralCount = 0;
-        let referralValue = ""; // Initialize referral value
+        let referralValue = 0; // Initialize referral value
 
         if (referralId) {
           referralCode = referralId.referralCode;
@@ -712,7 +712,7 @@ app.get("/users/:id", async (req, res) => {
 
         // Check if referral amount data exists
         if (referralAmount) {
-          referralValue = referralAmount.value;
+          referralValue = referralAmount.referralAmount;
         }
 
         return {
