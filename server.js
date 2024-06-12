@@ -871,41 +871,39 @@ app.get("/messages/:id", async (req, res) => {
 //Referral Show
 app.get("/referral/:id", async (req, res) => {
   const userId = req.params.id;
-  console.log("Referral id:", userId);
+  console.log("Received GET /referral/:id with userId:", userId);
 
   try {
-    // Fetch referral amount data for the user
     const referralAmountData = await ReferralAmount.findOne({ userId });
     if (!referralAmountData) {
-      return res
-        .status(404)
-        .json({ error: "Referral amount data not found for the user." });
+      console.warn(`ReferralAmount data not found for userId: ${userId}`);
     }
 
-    // Fetch referral data for the user
     const referral = await Referral.findOne({ userId });
     if (!referral) {
-      return res
-        .status(404)
-        .json({ error: "Referral data not found for the user." });
+      console.warn(`Referral data not found for userId: ${userId}`);
     }
 
-    const referralCode = referral.referralCode;
+    if (referral) {
+      const referralCode = referral.referralCode;
+      const referralUsers = await User.find({ referralCode });
+      const referralCount = referralUsers.length;
 
-    // Fetch users referred by this referral code
-    const referralUsers = await User.find({ referralCode });
-    const referralCount = referralUsers.length;
+      const results = {
+        count: referralCount || 0,
+        totalReferralAmount:
+          (referralAmountData && referralAmountData.referralAmount) || 0,
+        lastAmount: (referralAmountData && referralAmountData.newAmount) || 0,
+      };
 
-    // Create results object
-    const results = {
-      count: referralCount || 0,
-      totalReferralAmount: referralAmountData.referralAmount || 0,
-      lastAmount: referralAmountData.newAmount || 0,
-    };
-
-    res.json(results);
+      res.json(results);
+    } else {
+      res.status(404).json({
+        error: "Referral data not found for the user.",
+      });
+    }
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching referral data:", err);
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
