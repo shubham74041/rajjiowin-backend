@@ -297,6 +297,22 @@ const referralAmountSchema = new mongoose.Schema({
 
 const ReferralAmount = mongoose.model("ReferralAmount", referralAmountSchema);
 
+const checkInSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  newCheckInAmount: {
+    type: Number,
+    required: true,
+  },
+  totalCheckInAmount: { type: Number, required: true },
+  checkInDone: { type: Boolean, default: false },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+});
+
+const CheckInAmount = mongoose.model("CheckInAmount", checkInSchema);
+
 module.exports = {
   User,
   Recharge,
@@ -308,4 +324,5 @@ module.exports = {
   Contact,
   Popup,
   ReferralAmount,
+  CheckInAmount,
 };

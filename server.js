@@ -12,6 +12,7 @@ const {
   Popup,
   Products,
   ReferralAmount,
+  CheckInAmount,
 } = require("./mongo.js");
 
 const app = express();
@@ -459,6 +460,17 @@ app.post("/check-in/:userId", async (req, res) => {
       console.log(`No wallet found for userId: ${userId}`);
       return res.status(404).json({ message: "Wallet not found for user" });
     }
+    // const checkInData = await CheckInAmount.findOne({ userId: userId });
+    //  create check-in data
+    if (totalDailyIncome) {
+      await CheckInAmount.create({
+        userId: userId,
+        totalCheckInAmount: totalDailyIncome,
+        newCheckInAmount: totalDailyIncome,
+        checkInDone: true,
+      });
+      console.log(`Check-in data for user ${userId} created successfully`);
+    }
 
     return res.status(200).json({
       message: "Check-in complete",
@@ -626,6 +638,7 @@ app.get("/financial/:id", async (req, res) => {
     const rechargeData = await Recharge.find({ userId: id });
     const withdrawData = await Withdraw.find({ userId: id });
     const ReferralData = await ReferralAmount.find({ userId: id });
+    const CheckInData = await CheckInAmount.find({ userId: id });
 
     const results = [];
 
@@ -653,6 +666,16 @@ app.get("/financial/:id", async (req, res) => {
         amount: refer.newAmount,
         paid: refer.value,
         date: refer.createdAt,
+      });
+    });
+
+    CheckInData.forEach((checkin) => {
+      results.push({
+        type: "other",
+        anotherType: "checkIn",
+        amount: checkin.newCheckInAmount,
+        checkIn: checkin.checkInDone,
+        date: checkin.createdAt,
       });
     });
 
