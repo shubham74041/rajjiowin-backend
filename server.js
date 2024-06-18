@@ -390,7 +390,7 @@ app.post("/:userId", async (req, res) => {
     }
 
     const walletData = await Wallet.findOne({ userId: userId });
-    if (walletData.remainingBalance > price) {
+    if (walletData.remainingBalance >= price) {
       const restBalance = walletData.remainingBalance - parseFloat(price);
       const updatedWallet = {
         remainingBalance: parseFloat(restBalance),
