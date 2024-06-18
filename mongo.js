@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
-  referralCode: { type: String, unique: true },
+  referralCode: { type: String },
 });
 
 const User = mongoose.model("User", userSchema);
