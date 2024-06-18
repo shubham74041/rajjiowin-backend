@@ -418,7 +418,6 @@ app.post("/:userId", async (req, res) => {
 
 //Check-in
 let userLastCheckIn = {}; // Store last check-in times for simplicity
-let userLastPurchase = {}; // Store last purchase times for simplicity
 
 app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
@@ -430,7 +429,10 @@ app.post("/check-in/:userId", async (req, res) => {
   }
 
   try {
-    const orderData = await BuyProduct.find({ userId: userId });
+    const orderData = await BuyProduct.find({ userId: userId }).sort({
+      createdAt: -1,
+    });
+    // console.log("sorted value:", orderData);
     const wallet = await Wallet.findOne({ userId: userId });
 
     if (orderData.length === 0) {
@@ -439,11 +441,9 @@ app.post("/check-in/:userId", async (req, res) => {
         .json({ message: "You don't have any products", hasProducts: false });
     }
 
-    const lastPurchase = new Date(userLastPurchase[userId] || 0); // Last purchase time for the user
-
-    // Update last purchase time
-    userLastPurchase[userId] = new Date();
-
+    // Identify the current purchased product
+    const currentPurchase = orderData[0]; // Assuming the orders are sorted by purchaseDate in descending order
+    // console.log(currentPurchase);
     // Calculate totalDailyIncome from all orders
     let totalDailyIncome = 0;
     for (const order of orderData) {
@@ -451,25 +451,53 @@ app.post("/check-in/:userId", async (req, res) => {
       totalDailyIncome += order.productDailyIncome;
     }
 
-    // Update wallet balance
+    // Update wallet balance and create check-in data
     if (wallet) {
-      wallet.remainingBalance += totalDailyIncome;
-      await wallet.save();
-      console.log(`Wallet for user ${userId} updated successfully`);
+      // Check if it's a new day for check-in
+      const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
+      const now = new Date();
+
+      if (now.toDateString() !== lastCheckIn.toDateString()) {
+        // Daily check-in
+        wallet.remainingBalance += totalDailyIncome;
+        await wallet.save();
+        console.log(`Wallet for user ${userId} updated successfully`);
+
+        // Update last check-in time
+        userLastCheckIn[userId] = now;
+
+        // Create check-in data for daily check-in
+        await CheckInAmount.create({
+          userId: userId,
+          totalCheckInAmount: totalDailyIncome,
+          newCheckInAmount: totalDailyIncome,
+          checkInDone: true,
+        });
+        console.log(
+          `Daily check-in data for user ${userId} created successfully`
+        );
+      } else if (currentPurchase) {
+        // Current purchase check-in
+        wallet.remainingBalance += currentPurchase.productDailyIncome;
+        await wallet.save();
+        console.log(
+          `Wallet for user ${userId} updated with current purchase income successfully`
+        );
+
+        // Create check-in data for current purchase check-in
+        await CheckInAmount.create({
+          userId: userId,
+          totalCheckInAmount: currentPurchase.productDailyIncome,
+          newCheckInAmount: currentPurchase.productDailyIncome,
+          checkInDone: true,
+        });
+        console.log(
+          `Current purchase check-in data for user ${userId} created successfully`
+        );
+      }
     } else {
       console.log(`No wallet found for userId: ${userId}`);
       return res.status(404).json({ message: "Wallet not found for user" });
-    }
-    // const checkInData = await CheckInAmount.findOne({ userId: userId });
-    //  create check-in data
-    if (totalDailyIncome) {
-      await CheckInAmount.create({
-        userId: userId,
-        totalCheckInAmount: totalDailyIncome,
-        newCheckInAmount: totalDailyIncome,
-        checkInDone: true,
-      });
-      console.log(`Check-in data for user ${userId} created successfully`);
     }
 
     return res.status(200).json({
