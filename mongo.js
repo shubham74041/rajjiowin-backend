@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
     required: true,
+    unique: true,
     validate: {
       validator: function (v) {
         // Regular expression to validate mobile numbers
@@ -45,7 +46,7 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
   referralCode: { type: String },
 });
