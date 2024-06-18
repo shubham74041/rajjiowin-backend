@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
   referralCode: { type: String, unique: true },
 });
@@ -75,7 +75,7 @@ const rechargeSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
@@ -105,7 +105,7 @@ const walletSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
@@ -139,7 +139,7 @@ const productBuySchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 const BuyProduct = mongoose.model("BuysProducts", productBuySchema);
@@ -234,7 +234,7 @@ const withdrawSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
@@ -249,7 +249,7 @@ const contactSchema = new mongoose.Schema({
   message: { type: String, required: true },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 const Contact = mongoose.model("Contact", contactSchema);
@@ -291,7 +291,7 @@ const referralAmountSchema = new mongoose.Schema({
   value: { type: Boolean, default: false },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
@@ -307,7 +307,7 @@ const checkInSchema = new mongoose.Schema({
   checkInDone: { type: Boolean, default: false },
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
