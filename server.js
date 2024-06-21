@@ -21,15 +21,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// app.use(cors());
+app.use(cors());
 
-app.use(
-  cors({
-    origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
-    methods: "GET,POST", // Specify the allowed methods
-    credentials: true, // Allow credentials if needed
-  })
-);
+// app.use(
+//   cors({
+//     origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
+//     methods: "GET,POST", // Specify the allowed methods
+//     credentials: true, // Allow credentials if needed
+//   })
+// );
 
 // Enable CORS for all routes
 
@@ -569,12 +569,10 @@ app.post("/withdrawal/:id", async (req, res) => {
 
   try {
     const orderHistory = await BuyProduct.find({ userId: id });
+
     if (orderHistory.length === 0) {
       return res.status(400).send({ error: "No order history found for user" });
     }
-
-    const newWithdrawal = await Withdraw.create(newData);
-    console.log("Withdrawal data:", newWithdrawal);
 
     const walletData = await Wallet.findOne({ userId: id });
     if (!walletData) {
@@ -584,6 +582,9 @@ app.post("/withdrawal/:id", async (req, res) => {
     if (walletData.remainingBalance < data.withdrawalAmount) {
       return res.status(400).send({ error: "Insufficient balance in wallet" });
     }
+
+    const newWithdrawal = await Withdraw.create(newData);
+    console.log("Withdrawal data:", newWithdrawal);
 
     const updateWallet = {
       userTotalAmount: walletData.userTotalAmount - data.withdrawalAmount,
