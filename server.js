@@ -870,6 +870,7 @@ app.post("/users/:id", async (req, res) => {
       // Create new referral data
       const referralData = new ReferralAmount({
         userId: id,
+        newAmount: amount,
         referralAmount: amount,
         value: true,
       });
