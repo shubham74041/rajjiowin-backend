@@ -21,15 +21,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// app.use(cors());
+app.use(cors());
 
-app.use(
-  cors({
-    origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
-    methods: "GET,POST", // Specify the allowed methods
-    credentials: true, // Allow credentials if needed
-  })
-);
+// app.use(
+//   cors({
+//     origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
+//     methods: "GET,POST", // Specify the allowed methods
+//     credentials: true, // Allow credentials if needed
+//   })
+// );
 
 // Enable CORS for all routes
 
@@ -380,13 +380,15 @@ app.post("/:userId", async (req, res) => {
   };
 
   try {
-    // Check if the user has already purchased the product
-    const existingPurchase = await BuyProduct.findOne({
-      userId: userId,
-      productTitle: cardData.title,
-    });
-    if (existingPurchase) {
-      return res.json({ msg: "You have already purchased this product." });
+    // Check if the user has already purchased "Plan A"
+    if (cardData.title === "Plan A") {
+      const existingPurchase = await BuyProduct.findOne({
+        userId: userId,
+        productTitle: cardData.title,
+      });
+      if (existingPurchase) {
+        return res.json({ msg: "You have already purchased Plan A." });
+      }
     }
 
     const walletData = await Wallet.findOne({ userId: userId });
@@ -406,7 +408,10 @@ app.post("/:userId", async (req, res) => {
       );
       const newBuy = await BuyProduct.create(buyData);
 
-      res.json({ msg: "Product purchased successfully!" });
+      res.json({
+        msg: "Product purchased successfully!",
+        walletBalance: restBalance,
+      });
     } else {
       res.json({ msg: "Insufficient funds! Please recharge your wallet." });
     }
