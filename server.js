@@ -475,8 +475,7 @@ app.post("/check-in/:userId", async (req, res) => {
           walletBalance: wallet.remainingBalance,
         });
       } else if (
-        now.toDateString() === currentPurchase.createdAt.toDateString() &&
-        !userLastCheckIn[userId]
+        now.toDateString() === currentPurchase.createdAt.toDateString()
       ) {
         // Current purchase check-in (only for the same day of purchase)
         wallet.remainingBalance += currentPurchase.productDailyIncome;
