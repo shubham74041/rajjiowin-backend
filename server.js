@@ -475,11 +475,14 @@ app.post("/check-in/:userId", async (req, res) => {
           walletBalance: wallet.remainingBalance,
         });
       } else if (
-        now.toDateString() === currentPurchase.createdAt.toDateString()
+        now.toDateString() === currentPurchase.createdAt.toDateString() &&
+        !userLastCheckIn[userId]
       ) {
         // Current purchase check-in (only for the same day of purchase)
         wallet.remainingBalance += currentPurchase.productDailyIncome;
         await wallet.save();
+
+        userLastCheckIn[userId] = now;
 
         await CheckInAmount.create({
           userId: userId,
