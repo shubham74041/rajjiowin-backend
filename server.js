@@ -423,7 +423,6 @@ app.post("/:userId", async (req, res) => {
 
 //Check-in
 let userLastCheckIn = {}; // Store last check-in times
-
 app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
 
@@ -437,6 +436,10 @@ app.post("/check-in/:userId", async (req, res) => {
     });
     const wallet = await Wallet.findOne({ userId: userId });
 
+    if (!wallet) {
+      return res.status(404).json({ message: "Wallet not found for user" });
+    }
+
     if (!orderData.length) {
       return res.status(200).json({
         message: "You don't have any products",
@@ -447,10 +450,6 @@ app.post("/check-in/:userId", async (req, res) => {
     const currentPurchase = orderData[0];
     const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
     const now = new Date();
-
-    if (!wallet) {
-      return res.status(404).json({ message: "Wallet not found for user" });
-    }
 
     if (now.toDateString() !== lastCheckIn.toDateString()) {
       // Daily check-in: only once per new day
@@ -482,8 +481,6 @@ app.post("/check-in/:userId", async (req, res) => {
       // Current purchase check-in: only add the current purchase amount
       wallet.remainingBalance += currentPurchase.productDailyIncome;
       await wallet.save();
-
-      userLastCheckIn[userId] = now;
 
       await CheckInAmount.create({
         userId: userId,
