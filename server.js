@@ -447,9 +447,13 @@ app.post("/check-in/:userId", async (req, res) => {
       });
     }
 
+    // console.log("User CheckIn Time", userLastCheckIn);
+
     const currentPurchase = orderData[0];
+    // console.log("current Purchased product", currentPurchase);
     const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
     const now = new Date();
+    // console.log("Current Date:", now);
 
     if (now.toDateString() !== lastCheckIn.toDateString()) {
       // Daily check-in: only once per new day
@@ -463,31 +467,35 @@ app.post("/check-in/:userId", async (req, res) => {
 
       userLastCheckIn[userId] = now;
 
-      await CheckInAmount.create({
+      const DailyCheckIn = await CheckInAmount.create({
         userId: userId,
         totalCheckInAmount: totalDailyIncome,
         newCheckInAmount: totalDailyIncome,
         checkInDone: true,
       });
 
+      // console.log("Daily", DailyCheckIn);
       return res.status(200).json({
         message: "Daily check-in complete",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
       });
     } else if (
-      now.toDateString() === currentPurchase.createdAt.toDateString()
+      now.toDateString() === currentPurchase.createdAt.toDateString() &&
+      currentPurchase.createdAt > lastCheckIn
     ) {
       // Current purchase check-in: only add the current purchase amount
       wallet.remainingBalance += currentPurchase.productDailyIncome;
       await wallet.save();
 
-      await CheckInAmount.create({
+      const CurrentCheckIn = await CheckInAmount.create({
         userId: userId,
         totalCheckInAmount: currentPurchase.productDailyIncome,
         newCheckInAmount: currentPurchase.productDailyIncome,
         checkInDone: true,
       });
+
+      // console.log("Current Purchase: ", CurrentCheckIn);
 
       return res.status(200).json({
         message: "Current purchase check-in complete",
