@@ -156,6 +156,7 @@ app.post("/delete-account/:id", async (req, res) => {
     const deleteReferralAmount = await ReferralAmount.findOneAndDelete({
       userId: id,
     });
+    const deleteCheckInAmount = await CheckInAmount.deleteMany({ userId: id });
 
     res.json({ resMsg: "Account deleted successfully" });
   } catch (error) {
@@ -455,7 +456,29 @@ app.post("/check-in/:userId", async (req, res) => {
     const now = new Date();
     // console.log("Current Date:", now);
 
-    if (now.toDateString() !== lastCheckIn.toDateString()) {
+    if (
+      now.toDateString() === currentPurchase.createdAt.toDateString() &&
+      currentPurchase.createdAt > lastCheckIn
+    ) {
+      // Current purchase check-in: only add the current purchase amount
+      wallet.remainingBalance += currentPurchase.productDailyIncome;
+      await wallet.save();
+
+      const CurrentCheckIn = await CheckInAmount.create({
+        userId: userId,
+        totalCheckInAmount: currentPurchase.productDailyIncome,
+        newCheckInAmount: currentPurchase.productDailyIncome,
+        checkInDone: true,
+      });
+
+      // console.log("Current Purchase: ", CurrentCheckIn);
+
+      return res.status(200).json({
+        message: "Current purchase check-in complete",
+        hasProducts: true,
+        walletBalance: wallet.remainingBalance,
+      });
+    } else if (now.toDateString() !== lastCheckIn.toDateString()) {
       // Daily check-in: only once per new day
       const totalDailyIncome = orderData.reduce(
         (sum, order) => sum + order.productDailyIncome,
@@ -477,28 +500,6 @@ app.post("/check-in/:userId", async (req, res) => {
       // console.log("Daily", DailyCheckIn);
       return res.status(200).json({
         message: "Daily check-in complete",
-        hasProducts: true,
-        walletBalance: wallet.remainingBalance,
-      });
-    } else if (
-      now.toDateString() === currentPurchase.createdAt.toDateString() &&
-      currentPurchase.createdAt > lastCheckIn
-    ) {
-      // Current purchase check-in: only add the current purchase amount
-      wallet.remainingBalance += currentPurchase.productDailyIncome;
-      await wallet.save();
-
-      const CurrentCheckIn = await CheckInAmount.create({
-        userId: userId,
-        totalCheckInAmount: currentPurchase.productDailyIncome,
-        newCheckInAmount: currentPurchase.productDailyIncome,
-        checkInDone: true,
-      });
-
-      // console.log("Current Purchase: ", CurrentCheckIn);
-
-      return res.status(200).json({
-        message: "Current purchase check-in complete",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
       });
