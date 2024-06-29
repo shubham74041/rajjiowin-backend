@@ -453,7 +453,7 @@ app.post("/check-in/:userId", async (req, res) => {
     }
 
     if (now.toDateString() !== lastCheckIn.toDateString()) {
-      // Daily check-in
+      // Daily check-in: only once per new day
       const totalDailyIncome = orderData.reduce(
         (sum, order) => sum + order.productDailyIncome,
         0
@@ -479,7 +479,7 @@ app.post("/check-in/:userId", async (req, res) => {
     } else if (
       now.toDateString() === currentPurchase.createdAt.toDateString()
     ) {
-      // Current purchase check-in
+      // Current purchase check-in: only add the current purchase amount
       wallet.remainingBalance += currentPurchase.productDailyIncome;
       await wallet.save();
 
