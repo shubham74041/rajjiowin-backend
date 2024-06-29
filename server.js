@@ -422,7 +422,7 @@ app.post("/:userId", async (req, res) => {
 });
 
 //Check-in
-let userLastCheckIn = {}; // Store last check-in times for simplicity
+let userLastCheckIn = {}; // Store last check-in times
 
 app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
@@ -437,73 +437,72 @@ app.post("/check-in/:userId", async (req, res) => {
     });
     const wallet = await Wallet.findOne({ userId: userId });
 
-    if (orderData.length === 0) {
-      return res
-        .status(200)
-        .json({ message: "You don't have any products", hasProducts: false });
+    if (!orderData.length) {
+      return res.status(200).json({
+        message: "You don't have any products",
+        hasProducts: false,
+      });
     }
 
-    const currentPurchase = orderData[0]; // Assuming the orders are sorted by purchaseDate in descending order
+    const currentPurchase = orderData[0];
+    const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
+    const now = new Date();
 
-    // Update wallet balance and create check-in data
-    if (wallet) {
-      const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
-      const now = new Date();
-
-      if (now.toDateString() !== lastCheckIn.toDateString()) {
-        // Daily check-in
-        const totalDailyIncome = orderData.reduce(
-          (sum, order) => sum + order.productDailyIncome,
-          0
-        );
-
-        wallet.remainingBalance += totalDailyIncome;
-        await wallet.save();
-
-        userLastCheckIn[userId] = now;
-
-        await CheckInAmount.create({
-          userId: userId,
-          totalCheckInAmount: totalDailyIncome,
-          newCheckInAmount: totalDailyIncome,
-          checkInDone: true,
-        });
-
-        return res.status(200).json({
-          message: "Daily check-in complete",
-          hasProducts: true,
-          walletBalance: wallet.remainingBalance,
-        });
-      } else if (
-        now.toDateString() === currentPurchase.createdAt.toDateString()
-      ) {
-        // Current purchase check-in (only for the same day of purchase)
-        wallet.remainingBalance += currentPurchase.productDailyIncome;
-        await wallet.save();
-
-        userLastCheckIn[userId] = now;
-
-        await CheckInAmount.create({
-          userId: userId,
-          totalCheckInAmount: currentPurchase.productDailyIncome,
-          newCheckInAmount: currentPurchase.productDailyIncome,
-          checkInDone: true,
-        });
-
-        return res.status(200).json({
-          message: "Current purchase check-in complete",
-          hasProducts: true,
-          walletBalance: wallet.remainingBalance,
-        });
-      } else {
-        return res.status(200).json({
-          message: "Already checked in today",
-          hasProducts: true,
-          walletBalance: wallet.remainingBalance,
-        });
-      }
-    } else {
+    if (!wallet) {
       return res.status(404).json({ message: "Wallet not found for user" });
+    }
+
+    if (now.toDateString() !== lastCheckIn.toDateString()) {
+      // Daily check-in
+      const totalDailyIncome = orderData.reduce(
+        (sum, order) => sum + order.productDailyIncome,
+        0
+      );
+
+      wallet.remainingBalance += totalDailyIncome;
+      await wallet.save();
+
+      userLastCheckIn[userId] = now;
+
+      await CheckInAmount.create({
+        userId: userId,
+        totalCheckInAmount: totalDailyIncome,
+        newCheckInAmount: totalDailyIncome,
+        checkInDone: true,
+      });
+
+      return res.status(200).json({
+        message: "Daily check-in complete",
+        hasProducts: true,
+        walletBalance: wallet.remainingBalance,
+      });
+    } else if (
+      now.toDateString() === currentPurchase.createdAt.toDateString()
+    ) {
+      // Current purchase check-in
+      wallet.remainingBalance += currentPurchase.productDailyIncome;
+      await wallet.save();
+
+      userLastCheckIn[userId] = now;
+
+      await CheckInAmount.create({
+        userId: userId,
+        totalCheckInAmount: currentPurchase.productDailyIncome,
+        newCheckInAmount: currentPurchase.productDailyIncome,
+        checkInDone: true,
+      });
+
+      return res.status(200).json({
+        message: "Current purchase check-in complete",
+        hasProducts: true,
+        walletBalance: wallet.remainingBalance,
+      });
+    } else {
+      return res.status(200).json({
+        message: "Already checked in today",
+        hasProducts: true,
+        walletBalance: wallet.remainingBalance,
+      });
     }
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
