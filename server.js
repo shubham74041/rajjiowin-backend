@@ -977,6 +977,34 @@ app.get("/", async (req, res) => {
   }
 });
 
+// Getting All Cards
+app.get("/:userId/purchasedPlans", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userRecords = await BuyProduct.find({ userId });
+
+    // Collect all purchased plans from the user records
+    const purchasedPlans = userRecords.map((record) => ({
+      productTitle: record.productTitle,
+    }));
+
+    let products = await Products.find({});
+
+    // Sort products by plan name (e.g., "Plan A" to "Plan F")
+    products = products.sort((a, b) => a.title.localeCompare(b.title));
+
+    // console.log(products);
+
+    res.json({
+      purchasedPlans,
+      cards: products,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "An error occurred while fetching data." });
+  }
+});
+
 // Listen on dynamically assigned port by Vercel
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
