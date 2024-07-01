@@ -21,15 +21,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// app.use(cors());
+app.use(cors());
 
-app.use(
-  cors({
-    origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
-    methods: "GET,POST", // Specify the allowed methods
-    credentials: true, // Allow credentials if needed
-  })
-);
+// app.use(
+//   cors({
+//     origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
+//     methods: "GET,POST", // Specify the allowed methods
+//     credentials: true, // Allow credentials if needed
+//   })
+// );
 
 // Enable CORS for all routes
 
@@ -246,7 +246,7 @@ app.post("/recharge-data/:id", async (req, res) => {
   try {
     const updatedData = await Recharge.findOneAndUpdate(
       { _id: id },
-      { paid: paid },
+      { paid: paid, disabled: true }, // Set disabled to true
       { new: true }
     );
     console.log("New Updated Data:", updatedData);
@@ -278,7 +278,6 @@ app.post("/recharge-data/:id", async (req, res) => {
       }
     }
 
-    // console.log(updatedData);
     res.status(200).send("Data updated successfully");
   } catch (error) {
     console.error("Error updating data:", error);
@@ -462,7 +461,11 @@ app.post("/check-in/:userId", async (req, res) => {
     ) {
       // Current purchase check-in: only add the current purchase amount
       wallet.remainingBalance += currentPurchase.productDailyIncome;
+      userLastCheckIn[userId] = now;
+      wallet.lastCheckIn = now;
       await wallet.save();
+
+      // userLastCheckIn[userId] = now;
 
       const CurrentCheckIn = await CheckInAmount.create({
         userId: userId,
@@ -486,9 +489,11 @@ app.post("/check-in/:userId", async (req, res) => {
       );
 
       wallet.remainingBalance += totalDailyIncome;
+      userLastCheckIn[userId] = now;
+      wallet.lastCheckIn = now;
       await wallet.save();
 
-      userLastCheckIn[userId] = now;
+      // userLastCheckIn[userId] = now;
 
       const DailyCheckIn = await CheckInAmount.create({
         userId: userId,
@@ -512,6 +517,28 @@ app.post("/check-in/:userId", async (req, res) => {
     }
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// checkin update
+app.get("/:userId/check-in-status", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const wallet = await Wallet.findOne({ userId: userId });
+    if (!wallet) {
+      return res.status(404).json({ message: "Wallet not found" });
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const lastCheckIn = wallet.lastCheckIn
+      ? new Date(wallet.lastCheckIn).toISOString().split("T")[0]
+      : null;
+
+    const isEnabled = lastCheckIn !== today; // Enable if last check-in is not today
+
+    res.status(200).json({ isEnabled });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

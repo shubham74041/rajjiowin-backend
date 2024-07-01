@@ -78,6 +78,10 @@ const rechargeSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  disabled: {
+    type: Boolean,
+    default: false, // New field to track if buttons should be disabled
+  },
 });
 
 const Recharge = mongoose.model("Recharge", rechargeSchema);
@@ -300,16 +304,10 @@ const ReferralAmount = mongoose.model("ReferralAmount", referralAmountSchema);
 
 const checkInSchema = new mongoose.Schema({
   userId: { type: String, required: true },
-  newCheckInAmount: {
-    type: Number,
-    required: true,
-  },
+  newCheckInAmount: { type: Number, required: true },
   totalCheckInAmount: { type: Number, required: true },
   checkInDone: { type: Boolean, default: false },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  createdAt: { type: Date, default: Date.now },
 });
 
 const CheckInAmount = mongoose.model("CheckInAmount", checkInSchema);
