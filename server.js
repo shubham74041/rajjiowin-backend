@@ -528,7 +528,10 @@ app.get("/:userId/check-in-status", async (req, res) => {
 
     const isEnabled = lastCheckIn !== today; // Enable if last check-in is not today
 
-    res.status(200).json({ isEnabled });
+    res.status(200).json({
+      isEnabled,
+      lastSuccessfulCheckIn: wallet.lastCheckIn,
+    });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
