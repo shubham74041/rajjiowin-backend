@@ -459,6 +459,7 @@ app.post("/check-in/:userId", async (req, res) => {
       wallet.remainingBalance += currentPurchase.productDailyIncome;
       userLastCheckIn[userId] = now;
       wallet.lastCheckIn = now;
+      wallet.checkInEnabled = false; // Disable the check-in button after check-in
       await wallet.save();
 
       const CurrentCheckIn = await CheckInAmount.create({
@@ -484,6 +485,7 @@ app.post("/check-in/:userId", async (req, res) => {
       wallet.remainingBalance += totalDailyIncome;
       userLastCheckIn[userId] = now;
       wallet.lastCheckIn = now;
+      wallet.checkInEnabled = false; // Disable the check-in button after check-in
       await wallet.save();
 
       const DailyCheckIn = await CheckInAmount.create({
