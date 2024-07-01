@@ -112,6 +112,8 @@ const walletSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  lastCheckIn: Date,
+  checkInEnabled: { type: Boolean, default: false }, // Add this line
 });
 
 const Wallet = mongoose.model("Wallet", walletSchema);

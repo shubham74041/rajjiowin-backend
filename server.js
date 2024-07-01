@@ -399,6 +399,7 @@ app.post("/:userId", async (req, res) => {
         purchasingAmount: parseFloat(price),
         totalPurchasingAmount:
           walletData.totalPurchasingAmount + parseFloat(price),
+        checkInEnabled: true, // Enable the check-in button
       };
 
       const newData = await Wallet.findByIdAndUpdate(
@@ -411,6 +412,7 @@ app.post("/:userId", async (req, res) => {
       res.json({
         msg: "Product purchased successfully!",
         walletBalance: restBalance,
+        checkInEnabled: true, // Pass the check-in enabled status
       });
     } else {
       res.json({ msg: "Insufficient funds! Please recharge your wallet." });
@@ -528,6 +530,7 @@ app.get("/:userId/check-in-status", async (req, res) => {
       ? new Date(wallet.lastCheckIn).toISOString().split("T")[0]
       : null;
 
+    // const isEnabled = wallet.checkInEnabled && lastCheckIn !== today;
     const isEnabled = lastCheckIn !== today; // Enable if last check-in is not today
 
     res.status(200).json({
