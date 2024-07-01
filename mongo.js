@@ -304,6 +304,7 @@ const ReferralAmount = mongoose.model("ReferralAmount", referralAmountSchema);
 
 const checkInSchema = new mongoose.Schema({
   userId: { type: String, required: true },
+  lastSuccessfulCheckIn: { type: Date }, // Store the last successful check-in date
   newCheckInAmount: { type: Number, required: true },
   totalCheckInAmount: { type: Number, required: true },
   checkInDone: { type: Boolean, default: false },

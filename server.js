@@ -424,7 +424,7 @@ app.post("/:userId", async (req, res) => {
 //Check-in
 let userLastCheckIn = {}; // Store last check-in times
 
-app.post("/check-in/:userId", async (req, res) => {
+app.post("/:userId", async (req, res) => {
   const userId = req.params.userId;
 
   if (!userId) {
@@ -463,6 +463,7 @@ app.post("/check-in/:userId", async (req, res) => {
 
       const CurrentCheckIn = await CheckInAmount.create({
         userId: userId,
+        lastSuccessfulCheckIn: now, // Store the last successful check-in date
         totalCheckInAmount: currentPurchase.productDailyIncome,
         newCheckInAmount: currentPurchase.productDailyIncome,
         checkInDone: true,
@@ -472,6 +473,7 @@ app.post("/check-in/:userId", async (req, res) => {
         message: "Current purchase check-in complete",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
+        lastSuccessfulCheckIn: now, // Send last successful check-in date to frontend
       });
     } else if (now.toDateString() !== lastCheckIn.toDateString()) {
       const totalDailyIncome = orderData.reduce(
@@ -486,6 +488,7 @@ app.post("/check-in/:userId", async (req, res) => {
 
       const DailyCheckIn = await CheckInAmount.create({
         userId: userId,
+        lastSuccessfulCheckIn: now, // Store the last successful check-in date
         totalCheckInAmount: totalDailyIncome,
         newCheckInAmount: totalDailyIncome,
         checkInDone: true,
@@ -495,15 +498,18 @@ app.post("/check-in/:userId", async (req, res) => {
         message: "Daily check-in complete",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
+        lastSuccessfulCheckIn: now, // Send last successful check-in date to frontend
       });
     } else {
       return res.status(200).json({
         message: "Already checked in today",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
+        lastSuccessfulCheckIn: lastCheckIn, // Send last successful check-in date to frontend
       });
     }
   } catch (error) {
+    console.error("Error during check-in:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
