@@ -424,7 +424,7 @@ app.post("/:userId", async (req, res) => {
 //Check-in
 let userLastCheckIn = {}; // Store last check-in times
 
-app.post("/:userId", async (req, res) => {
+app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
 
   if (!userId) {
@@ -509,7 +509,6 @@ app.post("/:userId", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error during check-in:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
