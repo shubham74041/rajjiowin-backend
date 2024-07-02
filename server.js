@@ -530,8 +530,7 @@ app.get("/:userId/check-in-status", async (req, res) => {
       ? new Date(wallet.lastCheckIn).toISOString().split("T")[0]
       : null;
 
-    // const isEnabled = wallet.checkInEnabled && lastCheckIn !== today;
-    const isEnabled = lastCheckIn !== today; // Enable if last check-in is not today
+    const isEnabled = lastCheckIn !== today;
 
     res.status(200).json({
       isEnabled,
