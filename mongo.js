@@ -112,8 +112,6 @@ const walletSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  lastCheckIn: Date,
-  checkInEnabled: { type: Boolean, default: false }, // Add this line
 });
 
 const Wallet = mongoose.model("Wallet", walletSchema);
@@ -147,6 +145,10 @@ const productBuySchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  checkInStatus: {
+    type: Boolean,
+    default: false,
   },
 });
 const BuyProduct = mongoose.model("BuysProducts", productBuySchema);
@@ -306,10 +308,10 @@ const ReferralAmount = mongoose.model("ReferralAmount", referralAmountSchema);
 
 const checkInSchema = new mongoose.Schema({
   userId: { type: String, required: true },
-  lastSuccessfulCheckIn: { type: Date }, // Store the last successful check-in date
+
   newCheckInAmount: { type: Number, required: true },
   totalCheckInAmount: { type: Number, required: true },
-  checkInDone: { type: Boolean, default: false },
+  checkInDone: { type: Boolean },
   createdAt: { type: Date, default: Date.now },
 });
 

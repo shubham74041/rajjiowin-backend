@@ -366,6 +366,25 @@ app.get("/:id", async (req, res) => {
 });
 
 // api call for wallet data
+
+// Endpoint to fetch check-in status
+app.get("/:userId/check-in-status", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const latestPurchase = await BuyProduct.findOne({ userId }).sort({
+      createdAt: -1,
+    });
+    if (!latestPurchase) {
+      return res.status(404).json({ message: "No purchase found for user" });
+    }
+    res.status(200).json({ checkInStatus: latestPurchase.checkInStatus });
+  } catch (error) {
+    console.error("Error fetching check-in status:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Purchase endpoint
 app.post("/:userId", async (req, res) => {
   const userId = req.params.userId;
   const { price, cardData } = req.body;
@@ -377,10 +396,10 @@ app.post("/:userId", async (req, res) => {
     productDailyIncome: cardData.dailyIncome,
     productTotalAmount: cardData.totalAmount,
     productCycle: cardData.cycle,
+    checkInStatus: true, // Set checkInStatus to true after purchase
   };
 
   try {
-    // Check if the user has already purchased "Plan A"
     if (cardData.title === "Plan A") {
       const existingPurchase = await BuyProduct.findOne({
         userId: userId,
@@ -399,33 +418,28 @@ app.post("/:userId", async (req, res) => {
         purchasingAmount: parseFloat(price),
         totalPurchasingAmount:
           walletData.totalPurchasingAmount + parseFloat(price),
-        checkInEnabled: true, // Enable the check-in button
       };
 
-      const newData = await Wallet.findByIdAndUpdate(
-        walletData._id,
-        updatedWallet,
-        { new: true }
-      );
-      const newBuy = await BuyProduct.create(buyData);
+      await Wallet.findByIdAndUpdate(walletData._id, updatedWallet, {
+        new: true,
+      });
+      await BuyProduct.create(buyData);
 
       res.json({
         msg: "Product purchased successfully!",
         walletBalance: restBalance,
-        checkInEnabled: true, // Pass the check-in enabled status
       });
     } else {
       res.json({ msg: "Insufficient funds! Please recharge your wallet." });
     }
   } catch (error) {
-    console.error("Error fetching wallet data:", error);
+    console.error("Error processing purchase:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-//Check-in
+// Check-in endpoint
 let userLastCheckIn = {}; // Store last check-in times
-
 app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
 
@@ -460,13 +474,13 @@ app.post("/check-in/:userId", async (req, res) => {
     ) {
       wallet.remainingBalance += currentPurchase.productDailyIncome;
       userLastCheckIn[userId] = now;
-      wallet.lastCheckIn = now;
-      wallet.checkInEnabled = false; // Disable the check-in button after check-in
-      await wallet.save();
 
-      const CurrentCheckIn = await CheckInAmount.create({
+      currentPurchase.checkInStatus = false; // Set checkInStatus to false after check-in
+      await wallet.save();
+      await currentPurchase.save();
+
+      await CheckInAmount.create({
         userId: userId,
-        lastSuccessfulCheckIn: now, // Store the last successful check-in date
         totalCheckInAmount: currentPurchase.productDailyIncome,
         newCheckInAmount: currentPurchase.productDailyIncome,
         checkInDone: true,
@@ -476,9 +490,10 @@ app.post("/check-in/:userId", async (req, res) => {
         message: "Current purchase check-in complete",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
-        lastSuccessfulCheckIn: now, // Send last successful check-in date to frontend
       });
-    } else if (now.toDateString() !== lastCheckIn.toDateString()) {
+    }
+    // Daily CheckIn Logic
+    else if (now.toDateString() !== lastCheckIn.toDateString()) {
       const totalDailyIncome = orderData.reduce(
         (sum, order) => sum + order.productDailyIncome,
         0
@@ -486,13 +501,15 @@ app.post("/check-in/:userId", async (req, res) => {
 
       wallet.remainingBalance += totalDailyIncome;
       userLastCheckIn[userId] = now;
-      wallet.lastCheckIn = now;
-      wallet.checkInEnabled = false; // Disable the check-in button after check-in
+
+      orderData.forEach((order) => {
+        order.checkInStatus = false; // Set checkInStatus to false for all products
+        order.save();
+      });
       await wallet.save();
 
-      const DailyCheckIn = await CheckInAmount.create({
+      await CheckInAmount.create({
         userId: userId,
-        lastSuccessfulCheckIn: now, // Store the last successful check-in date
         totalCheckInAmount: totalDailyIncome,
         newCheckInAmount: totalDailyIncome,
         checkInDone: true,
@@ -502,14 +519,12 @@ app.post("/check-in/:userId", async (req, res) => {
         message: "Daily check-in complete",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
-        lastSuccessfulCheckIn: now, // Send last successful check-in date to frontend
       });
     } else {
       return res.status(200).json({
         message: "Already checked in today",
         hasProducts: true,
         walletBalance: wallet.remainingBalance,
-        lastSuccessfulCheckIn: lastCheckIn, // Send last successful check-in date to frontend
       });
     }
   } catch (error) {
@@ -517,54 +532,30 @@ app.post("/check-in/:userId", async (req, res) => {
   }
 });
 
-app.get("/:userId/check-in-status", async (req, res) => {
-  const userId = req.params.userId;
-  try {
-    const wallet = await Wallet.findOne({ userId: userId });
-    if (!wallet) {
-      return res.status(404).json({ message: "Wallet not found" });
-    }
-
-    const today = new Date().toISOString().split("T")[0];
-    const lastCheckIn = wallet.lastCheckIn
-      ? new Date(wallet.lastCheckIn).toISOString().split("T")[0]
-      : null;
-
-    const isEnabled = lastCheckIn !== today;
-
-    res.status(200).json({
-      isEnabled,
-      lastSuccessfulCheckIn: wallet.lastCheckIn,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
 //
-app.post("/:userId", async (req, res) => {
-  const userId = req.params.userId;
-  const { price, cardData } = req.body;
+// app.post("/:userId", async (req, res) => {
+//   const userId = req.params.userId;
+//   const { price, cardData } = req.body;
 
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
-    }
+//   try {
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ msg: "User not found" });
+//     }
 
-    await BuyProduct.create({ userId, ...cardData });
+//     await BuyProduct.create({ userId, ...cardData });
 
-    // Update user's last purchase date
-    userLastPurchase[userId] = new Date();
+//     // Update user's last purchase date
+//     userLastPurchase[userId] = new Date();
 
-    res.status(200).json({ msg: "Product purchased successfully!" });
-  } catch (error) {
-    console.error("Error processing purchase:", error);
-    res
-      .status(500)
-      .json({ msg: "Error processing your purchase. Please try again later." });
-  }
-});
+//     res.status(200).json({ msg: "Product purchased successfully!" });
+//   } catch (error) {
+//     console.error("Error processing purchase:", error);
+//     res
+//       .status(500)
+//       .json({ msg: "Error processing your purchase. Please try again later." });
+//   }
+// });
 
 // recharge api
 
