@@ -559,7 +559,6 @@ app.post("/check-in/:userId", async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-
 // Check-in endpoint
 // let userLastCheckIn = {}; // Store last check-in times
 // app.post("/check-in/:userId", async (req, res) => {
