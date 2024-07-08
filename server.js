@@ -479,6 +479,11 @@ app.post("/check-in/:userId", async (req, res) => {
     const currentPurchase = orderData[0];
     const lastCheckIn = new Date(user.lastCheckIn || 0);
     const now = new Date();
+    const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
+
+    console.log("Last check-in date:", lastCheckIn);
+    console.log("Current date:", now);
+    console.log("Is new day:", isNewDay);
 
     const daysSincePurchase = Math.floor(
       (now - currentPurchase.createdAt) / (1000 * 60 * 60 * 24)
@@ -486,7 +491,7 @@ app.post("/check-in/:userId", async (req, res) => {
     const productCycle = parseInt(currentPurchase.productCycle);
 
     // Check if it's a new day
-    if (now.toDateString() !== lastCheckIn.toDateString()) {
+    if (isNewDay) {
       let totalDailyIncome = 0;
 
       for (const order of orderData) {
