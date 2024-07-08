@@ -479,7 +479,8 @@ app.post("/check-in/:userId", async (req, res) => {
     const currentPurchase = orderData[0];
     const lastCheckIn = new Date(user.lastCheckIn || 0);
     const now = new Date();
-    const isNewDay = now.toISOString() !== lastCheckIn.toISOString();
+    // const isNewDay = now.toISOString() !== lastCheckIn.toISOString();
+    const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
 
     console.log("User:", user);
     console.log("Last check-in date:", lastCheckIn);
