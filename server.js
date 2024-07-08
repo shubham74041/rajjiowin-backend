@@ -368,7 +368,7 @@ app.get("/:id", async (req, res) => {
 // api call for wallet data
 
 // Endpoint to fetch check-in status
-app.get("/:userId/check-in-status", async (req, res) => {
+app.get("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
   try {
     const latestPurchase = await BuyProduct.findOne({ userId }).sort({
@@ -377,7 +377,13 @@ app.get("/:userId/check-in-status", async (req, res) => {
     if (!latestPurchase) {
       return res.status(404).json({ message: "No purchase found for user" });
     }
-    const lastCheckIn = userLastCheckIn[userId] || null;
+
+    const user = await User.findOne({ phoneNumber: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const lastCheckIn = user.lastCheckIn || null;
     res
       .status(200)
       .json({ checkInStatus: latestPurchase.checkInStatus, lastCheckIn });
@@ -450,6 +456,11 @@ app.post("/check-in/:userId", async (req, res) => {
   }
 
   try {
+    const user = await User.findOne({ phoneNumber: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     const orderData = await BuyProduct.find({ userId: userId }).sort({
       createdAt: -1,
     });
@@ -467,7 +478,8 @@ app.post("/check-in/:userId", async (req, res) => {
     }
 
     const currentPurchase = orderData[0];
-    const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
+    // const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
+    const lastCheckIn = new Date(user.lastCheckIn || 0);
     const now = new Date();
 
     // Calculate the difference in days between the current date and the product's creation date
@@ -482,11 +494,13 @@ app.post("/check-in/:userId", async (req, res) => {
     ) {
       if (daysSincePurchase <= productCycle) {
         wallet.remainingBalance += currentPurchase.productDailyIncome;
-        userLastCheckIn[userId] = now;
+        // userLastCheckIn[userId] = now;
+        user.lastCheckIn = now;
 
         currentPurchase.checkInStatus = false; // Set checkInStatus to false after check-in
         await wallet.save();
         await currentPurchase.save();
+        await user.save();
 
         await CheckInAmount.create({
           userId: userId,
@@ -525,9 +539,11 @@ app.post("/check-in/:userId", async (req, res) => {
 
       if (totalDailyIncome > 0) {
         wallet.remainingBalance += totalDailyIncome;
-        userLastCheckIn[userId] = now;
+        // userLastCheckIn[userId] = now;
+        user.lastCheckIn = now;
 
         await wallet.save();
+        await user.save();
 
         await CheckInAmount.create({
           userId: userId,
@@ -929,6 +945,7 @@ app.get("/users/:id", async (req, res) => {
 });
 
 // admin user details
+
 app.get("/details-referral/:id", async (req, res) => {
   try {
     const id = req.params.id;

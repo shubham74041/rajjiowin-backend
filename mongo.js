@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
   referralCode: { type: String },
+  lastCheckIn: { type: Date, default: null }, // Add this field
 });
 
 const User = mongoose.model("User", userSchema);
