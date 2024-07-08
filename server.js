@@ -477,13 +477,24 @@ app.post("/check-in/:userId", async (req, res) => {
     }
 
     const currentPurchase = orderData[0];
-    const lastCheckIn = new Date(user.lastCheckIn || 0);
-    const now = new Date();
-    const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
+    // const lastCheckIn = new Date(user.lastCheckIn || 0);
+    // const now = new Date();
+    // const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
+
+    // console.log("User:", user);
+    // console.log("Last check-in date:", lastCheckIn);
+    // console.log("Current date:", now);
+    // console.log("Is new day:", isNewDay);
+
+    const lastCheckIn = DateTime.fromJSDate(user.lastCheckIn || 0).setZone(
+      "Asia/Kolkata"
+    ); // Convert lastCheckIn to IST
+    const now = DateTime.utc().setZone("Asia/Kolkata"); // Get current UTC time and convert to IST
+    const isNewDay = now.toISODate() !== lastCheckIn.toISODate();
 
     console.log("User:", user);
-    console.log("Last check-in date:", lastCheckIn);
-    console.log("Current date:", now);
+    console.log("Last check-in date (IST):", lastCheckIn.toISO());
+    console.log("Current date (IST):", now.toISO());
     console.log("Is new day:", isNewDay);
 
     const daysSincePurchase = Math.floor(
