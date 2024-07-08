@@ -447,7 +447,6 @@ app.post("/:userId", async (req, res) => {
   }
 });
 
-let userLastCheckIn = {}; // Store last check-in times
 app.post("/check-in/:userId", async (req, res) => {
   const userId = req.params.userId;
 
@@ -478,23 +477,63 @@ app.post("/check-in/:userId", async (req, res) => {
     }
 
     const currentPurchase = orderData[0];
-    // const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
     const lastCheckIn = new Date(user.lastCheckIn || 0);
     const now = new Date();
 
-    // Calculate the difference in days between the current date and the product's creation date
     const daysSincePurchase = Math.floor(
       (now - currentPurchase.createdAt) / (1000 * 60 * 60 * 24)
     );
     const productCycle = parseInt(currentPurchase.productCycle);
 
-    if (
+    // Check if it's a new day
+    if (now.toDateString() !== lastCheckIn.toDateString()) {
+      let totalDailyIncome = 0;
+
+      for (const order of orderData) {
+        const daysSincePurchase = Math.floor(
+          (now - order.createdAt) / (1000 * 60 * 60 * 24)
+        );
+        const productCycle = parseInt(order.productCycle);
+
+        if (daysSincePurchase <= productCycle) {
+          totalDailyIncome += order.productDailyIncome;
+          order.checkInStatus = false; // Set checkInStatus to false for all products within cycle
+          await order.save();
+        }
+      }
+
+      if (totalDailyIncome > 0) {
+        wallet.remainingBalance += totalDailyIncome;
+        user.lastCheckIn = now;
+
+        await wallet.save();
+        await user.save();
+
+        await CheckInAmount.create({
+          userId: userId,
+          totalCheckInAmount: totalDailyIncome,
+          newCheckInAmount: totalDailyIncome,
+          checkInDone: true,
+        });
+
+        return res.status(200).json({
+          message: "Daily check-in complete",
+          hasProducts: true,
+          walletBalance: wallet.remainingBalance,
+        });
+      } else {
+        return res.status(200).json({
+          message: "No products are eligible for check-in today",
+          hasProducts: true,
+          walletBalance: wallet.remainingBalance,
+        });
+      }
+    } else if (
       now.toDateString() === currentPurchase.createdAt.toDateString() &&
       currentPurchase.createdAt > lastCheckIn
     ) {
       if (daysSincePurchase <= productCycle) {
         wallet.remainingBalance += currentPurchase.productDailyIncome;
-        // userLastCheckIn[userId] = now;
         user.lastCheckIn = now;
 
         currentPurchase.checkInStatus = false; // Set checkInStatus to false after check-in
@@ -521,49 +560,6 @@ app.post("/check-in/:userId", async (req, res) => {
           walletBalance: wallet.remainingBalance,
         });
       }
-    } else if (now.toDateString() !== lastCheckIn.toDateString()) {
-      let totalDailyIncome = 0;
-
-      for (const order of orderData) {
-        const daysSincePurchase = Math.floor(
-          (now - order.createdAt) / (1000 * 60 * 60 * 24)
-        );
-        const productCycle = parseInt(order.productCycle);
-
-        if (daysSincePurchase <= productCycle) {
-          totalDailyIncome += order.productDailyIncome;
-          order.checkInStatus = false; // Set checkInStatus to false for all products within cycle
-          await order.save();
-        }
-      }
-
-      if (totalDailyIncome > 0) {
-        wallet.remainingBalance += totalDailyIncome;
-        // userLastCheckIn[userId] = now;
-        user.lastCheckIn = now;
-
-        await wallet.save();
-        await user.save();
-
-        await CheckInAmount.create({
-          userId: userId,
-          totalCheckInAmount: totalDailyIncome,
-          newCheckInAmount: totalDailyIncome,
-          checkInDone: true,
-        });
-
-        return res.status(200).json({
-          message: "Daily check-in complete",
-          hasProducts: true,
-          walletBalance: wallet.remainingBalance,
-        });
-      } else {
-        return res.status(200).json({
-          message: "No products are eligible for check-in today",
-          hasProducts: true,
-          walletBalance: wallet.remainingBalance,
-        });
-      }
     } else {
       return res.status(200).json({
         message: "Already checked in today",
@@ -575,6 +571,7 @@ app.post("/check-in/:userId", async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 // Check-in endpoint
 // let userLastCheckIn = {}; // Store last check-in times
 // app.post("/check-in/:userId", async (req, res) => {
