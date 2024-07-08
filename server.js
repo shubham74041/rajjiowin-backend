@@ -481,6 +481,7 @@ app.post("/check-in/:userId", async (req, res) => {
     const now = new Date();
     const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
 
+    console.log("User:", user);
     console.log("Last check-in date:", lastCheckIn);
     console.log("Current date:", now);
     console.log("Is new day:", isNewDay);
