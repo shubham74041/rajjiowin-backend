@@ -879,29 +879,104 @@ app.get("/financial/:id", async (req, res) => {
 
 //admin referral details
 
+// app.get("/users/:id", async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     console.log("userId", id);
+
+//     const userData = await User.find({});
+//     if (!userData || userData.length === 0) {
+//       return res.status(404).json({ error: "Users not found" });
+//     }
+
+//     const results = await Promise.all(
+//       userData.map(async (user) => {
+//         const userId = user.phoneNumber;
+
+//         // Fetch referral information concurrently
+//         const referralPromise = Referral.findOne({ userId: userId });
+
+//         // Fetch referral amount information concurrently
+//         const referralAmountPromise = ReferralAmount.findOne({
+//           userId: userId,
+//         });
+
+//         // Fetch order details concurrently
+//         const orderDetailPromise = BuyProduct.find({ userId: userId });
+
+//         const [referralId, referralAmount, orderDetail] = await Promise.all([
+//           referralPromise,
+//           referralAmountPromise,
+//           orderDetailPromise,
+//         ]);
+
+//         let referralCode = "";
+//         let referralCount = 0;
+//         let referralValue = 0; // Initialize referral value
+
+//         if (referralId) {
+//           referralCode = referralId.referralCode;
+//           const referredUsers = await User.find({ referralCode: referralCode });
+//           referralCount = referredUsers.length;
+//         } else {
+//           console.log(`Referral not found for userId: ${userId}`);
+//         }
+
+//         const orderCount = orderDetail.length;
+
+//         // Check if referral amount data exists
+//         if (referralAmount) {
+//           referralValue = referralAmount.referralAmount;
+//         }
+
+//         return {
+//           userId: user.phoneNumber,
+//           userPassword: user.password,
+//           referralId: referralCode,
+//           referralCount: referralCount,
+//           referralValue: referralValue, // Include referral value in the results
+//           usedReferralCode: user.referralCode, // Include the referral code used by the user
+//           orderCount: orderCount, // Include the order count
+//         };
+//       })
+//     );
+
+//     return res.json(results);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 app.get("/users/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    console.log("userId", id);
+    const page = parseInt(req.query.page, 10) || 1;
+    const size = parseInt(req.query.size, 10) || 10;
+    const search = req.query.search || "";
 
-    const userData = await User.find({});
+    const userData = await User.find({
+      $or: [
+        { phoneNumber: { $regex: search, $options: "i" } },
+        { referralId: { $regex: search, $options: "i" } },
+      ],
+    });
+
     if (!userData || userData.length === 0) {
       return res.status(404).json({ error: "Users not found" });
     }
 
+    const totalItems = userData.length;
+    const paginatedData = userData.slice((page - 1) * size, page * size);
+
     const results = await Promise.all(
-      userData.map(async (user) => {
+      paginatedData.map(async (user) => {
         const userId = user.phoneNumber;
 
-        // Fetch referral information concurrently
         const referralPromise = Referral.findOne({ userId: userId });
-
-        // Fetch referral amount information concurrently
         const referralAmountPromise = ReferralAmount.findOne({
           userId: userId,
         });
-
-        // Fetch order details concurrently
         const orderDetailPromise = BuyProduct.find({ userId: userId });
 
         const [referralId, referralAmount, orderDetail] = await Promise.all([
@@ -912,19 +987,16 @@ app.get("/users/:id", async (req, res) => {
 
         let referralCode = "";
         let referralCount = 0;
-        let referralValue = 0; // Initialize referral value
+        let referralValue = 0;
 
         if (referralId) {
           referralCode = referralId.referralCode;
           const referredUsers = await User.find({ referralCode: referralCode });
           referralCount = referredUsers.length;
-        } else {
-          console.log(`Referral not found for userId: ${userId}`);
         }
 
         const orderCount = orderDetail.length;
 
-        // Check if referral amount data exists
         if (referralAmount) {
           referralValue = referralAmount.referralAmount;
         }
@@ -934,14 +1006,14 @@ app.get("/users/:id", async (req, res) => {
           userPassword: user.password,
           referralId: referralCode,
           referralCount: referralCount,
-          referralValue: referralValue, // Include referral value in the results
-          usedReferralCode: user.referralCode, // Include the referral code used by the user
-          orderCount: orderCount, // Include the order count
+          referralValue: referralValue,
+          usedReferralCode: user.referralCode,
+          orderCount: orderCount,
         };
       })
     );
 
-    return res.json(results);
+    return res.json({ users: results, totalItems });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal server error" });
@@ -953,14 +1025,26 @@ app.get("/users/:id", async (req, res) => {
 app.get("/details-referral/:id", async (req, res) => {
   try {
     const id = req.params.id;
+    const page = parseInt(req.query.page, 10) || 1;
+    const size = parseInt(req.query.size, 10) || 10;
+    const search = req.query.search || "";
 
-    const userDataList = await User.find({});
+    const userDataList = await User.find({
+      $or: [
+        { phoneNumber: { $regex: search, $options: "i" } },
+        { referralId: { $regex: search, $options: "i" } },
+      ],
+    });
+
     if (!userDataList || userDataList.length === 0) {
       return res.status(404).json({ error: "Users not found" });
     }
 
+    const totalItems = userDataList.length;
+    const paginatedData = userDataList.slice((page - 1) * size, page * size);
+
     const results = await Promise.all(
-      userDataList.map(async (userData) => {
+      paginatedData.map(async (userData) => {
         const referralId = await Referral.findOne({
           userId: userData.phoneNumber,
         });
@@ -983,12 +1067,59 @@ app.get("/details-referral/:id", async (req, res) => {
       })
     );
 
-    res.json(results);
+    res.json({ referrals: results, totalItems });
   } catch (err) {
     console.error("Error fetching user details:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// app.get("/details-referral/:id", async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     // adding pages
+//     const page = parseInt(req.query.page) || 1;
+//     const size = parseInt(req.query.size) || 10;
+//     const skip = (page - 1) * size;
+
+//     // const userDataList = await User.find({});
+//     const userDataList = await User.find({}).skip(skip).limit(size);
+//     const totalItems = await User.countDocuments({});
+//     if (!userDataList || userDataList.length === 0) {
+//       return res.status(404).json({ error: "Users not found" });
+//     }
+
+//     const results = await Promise.all(
+//       userDataList.map(async (userData) => {
+//         const referralId = await Referral.findOne({
+//           userId: userData.phoneNumber,
+//         });
+
+//         const orderDetail = await BuyProduct.find({
+//           userId: userData.phoneNumber,
+//         });
+//         const orderCount = orderDetail.length;
+
+//         let referralCode = referralId
+//           ? referralId.referralCode
+//           : "No referral code";
+
+//         return {
+//           userId: userData.phoneNumber,
+//           userPassword: userData.password,
+//           referralId: referralCode,
+//           orderCount: orderCount,
+//         };
+//       })
+//     );
+
+//     // res.json(results);
+//     res.json({ referrals: results, totalItems: totalItems });
+//   } catch (err) {
+//     console.error("Error fetching user details:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
 
 // add amount
 
