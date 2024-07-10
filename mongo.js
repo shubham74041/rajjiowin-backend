@@ -22,6 +22,19 @@ async function main() {
   });
 }
 
+const adminSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const Admin = mongoose.model("Admin", adminSchema);
+
 // Define user schema
 const userSchema = new mongoose.Schema({
   email: {
@@ -330,4 +343,5 @@ module.exports = {
   Popup,
   ReferralAmount,
   CheckInAmount,
+  Admin,
 };

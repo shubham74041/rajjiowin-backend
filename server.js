@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -13,6 +15,7 @@ const {
   Products,
   ReferralAmount,
   CheckInAmount,
+  Admin,
 } = require("./mongo.js");
 
 const app = express();
@@ -73,6 +76,50 @@ app.use(
 // app.use("/", walletRoute);
 // app.use("/withdrawal", withdrawalRoute);
 // app.use("/withdraw-data", withdrawDataRoute);
+
+app.post("/admin-login", async (req, res) => {
+  const { username, password } = req.body;
+  const admin = await Admin.findOne({ username, password });
+  if (admin) {
+    res.send({ success: true });
+  } else {
+    res.send({ success: false });
+  }
+});
+// admin change password
+app.post("/change-password", async (req, res) => {
+  const { username, passkey, newPassword } = req.body;
+
+  try {
+    if (passkey !== process.env.ADMIN_PASSKEY) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Passkey not match" });
+    }
+
+    // Find the admin by username or any unique identifier you use
+    const admin = await Admin.findOne({ username }); // Replace 'admin' with your admin identifier logic
+
+    if (!admin) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Admin not found" });
+    }
+
+    // Update the password
+
+    admin.password = newPassword;
+    await admin.save();
+
+    res.json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred. Please try again.",
+    });
+  }
+});
 
 app.post("/", async (req, res) => {
   const { phoneNumber, password } = req.body;
