@@ -259,6 +259,7 @@ const withdrawSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  disabled: { type: Boolean, default: false }, // Add this line
 });
 
 const Withdraw = mongoose.model("Withdraw", withdrawSchema);
