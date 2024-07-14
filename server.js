@@ -831,6 +831,7 @@ app.get("/withdraw-data/:id", async (req, res) => {
 });
 
 //WithdrawData
+// Update withdrawal data with action
 app.post("/withdraw-data/:id", async (req, res) => {
   const { id } = req.params;
   const { action, amount, userId } = req.body;
@@ -839,32 +840,26 @@ app.post("/withdraw-data/:id", async (req, res) => {
   console.log("Withdraw amount:", amount);
 
   try {
-    let updateWallet;
     if (action === false) {
       const wallet = await Wallet.findOne({ userId: userId });
-      // console.log("Wallet:", wallet);
       if (!wallet) {
         return res.status(404).send({ message: "Wallet not found" });
       }
       const updatedBalance = wallet.remainingBalance + amount;
-      console.log("Updated Balance:", updatedBalance);
-      // Ensure updatedBalance is a valid number
       if (isNaN(updatedBalance)) {
         return res.status(400).send({ message: "Invalid remaining balance" });
       }
 
-      updateWallet = await Wallet.findByIdAndUpdate(
+      await Wallet.findByIdAndUpdate(
         wallet._id,
         { remainingBalance: updatedBalance },
         { new: true }
       );
-
-      console.log("Updated Wallet:", updateWallet);
     }
 
     const result = await Withdraw.findByIdAndUpdate(
       id,
-      { paid: action },
+      { paid: action, disabled: true }, // Update the 'disabled' state
       { new: true }
     );
 
@@ -872,14 +867,12 @@ app.post("/withdraw-data/:id", async (req, res) => {
       return res.status(404).send({ message: "Document not found" });
     }
 
-    console.log("Updated Withdraw:", result);
     res.send(result);
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: error.message });
   }
 });
-
 //products
 app.get("/order/:id", async (req, res) => {
   const id = req.params.id;
