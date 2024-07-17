@@ -28,8 +28,8 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
-    // origin: "http://65.2.142.221", // Replace with your frontend's domain
+    // origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
+    origin: "http://3.109.210.126", // Replace with your frontend's domain
 
     methods: "GET,POST", // Specify the allowed methods
     credentials: true, // Allow credentials if needed
@@ -295,7 +295,7 @@ app.post("/recharge-data/:id", async (req, res) => {
   try {
     const updatedData = await Recharge.findOneAndUpdate(
       { _id: id },
-      { paid: paid, disabled: true }, // Set disabled to true
+      { paid: paid, disabled: true, status: paid ? "paid" : "cancel" }, // Set disabled to true
       { new: true }
     );
     console.log("New Updated Data:", updatedData);
@@ -859,9 +859,15 @@ app.post("/withdraw-data/:id", async (req, res) => {
       );
     }
 
+    //status update
+
     const result = await Withdraw.findByIdAndUpdate(
       id,
-      { paid: action, disabled: true }, // Update the 'disabled' state
+      {
+        paid: action,
+        disabled: true,
+        status: action ? "paid" : "cancel",
+      },
       { new: true }
     );
 
@@ -905,6 +911,7 @@ app.get("/financial/:id", async (req, res) => {
         type: "recharge",
         amount: recharge.rechargeAmount,
         paid: recharge.paid,
+        status: recharge.status,
         date: recharge.createdAt,
       });
     });
@@ -914,6 +921,7 @@ app.get("/financial/:id", async (req, res) => {
         type: "withdraw",
         amount: withdraw.withdrawalAmount,
         paid: withdraw.paid,
+        status: withdraw.status,
         date: withdraw.createdAt,
       });
     });
@@ -1226,6 +1234,7 @@ app.post("/users/:id", async (req, res) => {
       referralData.newAmount = amount;
       referralData.referralAmount += amount;
       referralData.value = true;
+
       await referralData.save();
     } else {
       // Create new referral data

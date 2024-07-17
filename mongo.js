@@ -88,6 +88,10 @@ const rechargeSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // Assuming recharge is unpaid by default
   },
+  status: {
+    type: String,
+    default: "false",
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -254,6 +258,10 @@ const withdrawSchema = new mongoose.Schema({
   paid: {
     type: Boolean,
     default: false, // Assuming recharge is unpaid by default
+  },
+  status: {
+    type: String,
+    default: "false",
   },
   createdAt: {
     type: Date,
