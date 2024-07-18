@@ -58,7 +58,7 @@ router.post("/:userId", async (req, res) => {
         totalPurchasingAmount:
           walletData.totalPurchasingAmount + parseFloat(price),
       };
-
+      console.log(walletData._id);
       const newData = await Wallet.findByIdAndUpdate(
         walletData._id,
         updatedWallet,
