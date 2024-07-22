@@ -528,8 +528,12 @@ app.post("/check-in/:userId", async (req, res) => {
     const currentPurchase = orderData[0];
     const lastCheckIn = new Date(user.lastCheckIn || 0);
     const now = new Date();
-    const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
-    // const isNewDay = now.toISOString() !== lastCheckIn.toISOString();
+    // const isNewDay = now.toDateString() !== lastCheckIn.toDateString();
+    // Ensure time zones are the same
+    const isNewDay =
+      now.toLocaleDateString() !== lastCheckIn.toLocaleDateString();
+    console.log("Current time ", now.toLocaleDateString());
+    console.log("Last check-in time ", lastCheckIn.toLocaleDateString());
 
     // console.log("User:", user);
     // console.log("Last check-in date:", lastCheckIn);
