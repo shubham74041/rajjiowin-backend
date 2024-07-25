@@ -28,8 +28,8 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    // origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
-    origin: "http://43.204.109.203", // Replace with your frontend's domain
+    origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
+    // origin: "http://43.204.109.203", // Replace with your frontend's domain
 
     methods: "GET,POST", // Specify the allowed methods
     credentials: true, // Allow credentials if needed
