@@ -10,7 +10,16 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors());
+// app.use(cors());
+
+app.use(
+  cors({
+    origin: "https://rajjowin.in", // Ensure this matches your frontend's domain and protocol
+    methods: "*",
+    credentials: true,
+  })
+);
+
 
 //Signup endpoint
 // Handle signup with referral code
