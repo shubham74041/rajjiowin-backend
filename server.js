@@ -32,7 +32,7 @@ app.use(
 
     origin: "http://rajjowin.in", // Replace with your frontend's domain
 
-    methods: "GET,POST", // Specify the allowed methods
+    methods: "*", // Allow all methods
     credentials: true, // Allow credentials if needed
   })
 );
