@@ -30,7 +30,7 @@ app.use(
   cors({
         // origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
 
-    origin: "rajjowin.in", // Ensure this matches your frontend's domain and protocol
+    origin: "Rajjowin.in", // Ensure this matches your frontend's domain and protocol
     methods: "*",
     credentials: true,
   })

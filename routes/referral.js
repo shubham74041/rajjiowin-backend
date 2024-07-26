@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 // Enable CORS with specific origin
 app.use(
   cors({
-    origin: "https://finance-king-pi.vercel.app", // Update with your React app's domain
+    origin: "Rajjowin.in", // Update with your React app's domain
   })
 );
 

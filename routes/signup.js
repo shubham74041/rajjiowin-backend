@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: "https://rajjowin.in", // Ensure this matches your frontend's domain and protocol
+    origin: "Rajjowin.in", // Ensure this matches your frontend's domain and protocol
     methods: "*",
     credentials: true,
   })
