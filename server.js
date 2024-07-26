@@ -26,15 +26,31 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 // app.use(cors());
 
+app.use((req, res, next) => {
+  console.log("Request origin:", req.headers.origin);
+  next();
+});
+
 app.use(
   cors({
-        // origin: "https://finance-king-pi.vercel.app", // Replace with your frontend's domain
-
-    origin: "Rajjowin.in", // Ensure this matches your frontend's domain and protocol
+    origin: (origin, callback) => {
+      console.log("CORS Origin:", origin);
+      if (origin === "https://rajjowin.in") {
+        console.log("CORS Origin:", origin);
+        callback(null, true);
+      } else if (origin === "Rajjowin.in"){
+        console.log("CORS Origin2222:", origin);
+        callback(null, true);
+      } 
+      else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: "*",
     credentials: true,
   })
 );
+
 
 // Enable CORS for all routes
 
