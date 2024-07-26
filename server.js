@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -24,7 +22,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// app.use(cors());
 
 app.use((req, res, next) => {
   console.log("Request origin:", req.headers.origin);
@@ -34,66 +31,16 @@ app.use((req, res, next) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      console.log("CORS Origin:", origin);
       if (origin === "https://rajjowin.in") {
-        console.log("CORS Origin:", origin);
         callback(null, true);
-      } else if (origin === "Rajjowin.in"){
-        console.log("CORS Origin2222:", origin);
-        callback(null, true);
-      } 
-      else {
+      } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
     methods: "*",
     credentials: true,
   })
-);
-
-
-// Enable CORS for all routes
-
-// Root endpoint
-// app.get("/", async (req, res) => {
-//   try {
-//     const data = await User.find({});
-//     res.json(data);
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-// api for find user
-// app.get("/", async (req, res) => {
-//   const { user } = req.body;
-//   console.log(user);
-//   const data = await User.findOne({ phoneNumber: user });
-//   console.log(data);
-// });
-
-// Route imports
-// const loginRoute = require("./routes/login.js");
-// const signupRoute = require("./routes/signup.js");
-// const referralRoute = require("./routes/referral.js");
-// const rechargeRoute = require("./routes/recharge.js");
-// const rechargeDataRoute = require("./routes/recharge-data.js");
-// const orderRoute = require("./routes/order.js");
-// const walletRoute = require("./routes/wallet.js");
-// const withdrawalRoute = require("./routes/withdrawal.js");
-// const withdrawDataRoute = require("./routes/withdraw-data.js");
-
-// Use routes
-// app.use("/login", loginRoute);
-// app.use("/signup", signupRoute);
-// app.use("/referral", referralRoute);
-// app.use("/recharge", rechargeRoute);
-// app.use("/recharge-data", rechargeDataRoute);
-// app.use("/order", orderRoute);
-// app.use("/", walletRoute);
-// app.use("/withdrawal", withdrawalRoute);
-// app.use("/withdraw-data", withdrawDataRoute);
+)
 
 app.post("/admin-login", async (req, res) => {
   const { username, password } = req.body;
@@ -177,7 +124,6 @@ app.post("/signup", async (req, res) => {
       return;
     }
 
-    // Create new user with the provided referral code or generate a new one
     await User.create({ email, phoneNumber, password, referralCode });
     res.json("notexists");
   } catch (err) {
@@ -185,7 +131,6 @@ app.post("/signup", async (req, res) => {
     res.status(500).json("Internal server error");
   }
 });
-
 //edit password
 app.post("/password/:id", async (req, res) => {
   const { newPassword } = req.body;
@@ -648,127 +593,6 @@ app.post("/check-in/:userId", async (req, res) => {
   }
 });
 
-// Check-in endpoint
-// let userLastCheckIn = {}; // Store last check-in times
-// app.post("/check-in/:userId", async (req, res) => {
-//   const userId = req.params.userId;
-
-//   if (!userId) {
-//     return res.status(400).json({ message: "User ID is required" });
-//   }
-
-//   try {
-//     const orderData = await BuyProduct.find({ userId: userId }).sort({
-//       createdAt: -1,
-//     });
-//     const wallet = await Wallet.findOne({ userId: userId });
-
-//     if (!wallet) {
-//       return res.status(404).json({ message: "Wallet not found for user" });
-//     }
-
-//     if (!orderData.length) {
-//       return res.status(200).json({
-//         message: "You don't have any products",
-//         hasProducts: false,
-//       });
-//     }
-
-//     const currentPurchase = orderData[0];
-//     const lastCheckIn = new Date(userLastCheckIn[userId] || 0);
-//     const now = new Date();
-
-//     if (
-//       now.toDateString() === currentPurchase.createdAt.toDateString() &&
-//       currentPurchase.createdAt > lastCheckIn
-//     ) {
-//       wallet.remainingBalance += currentPurchase.productDailyIncome;
-//       userLastCheckIn[userId] = now;
-
-//       currentPurchase.checkInStatus = false; // Set checkInStatus to false after check-in
-//       await wallet.save();
-//       await currentPurchase.save();
-
-//       await CheckInAmount.create({
-//         userId: userId,
-//         totalCheckInAmount: currentPurchase.productDailyIncome,
-//         newCheckInAmount: currentPurchase.productDailyIncome,
-//         checkInDone: true,
-//       });
-
-//       return res.status(200).json({
-//         message: "Current purchase check-in complete",
-//         hasProducts: true,
-//         walletBalance: wallet.remainingBalance,
-//       });
-//     }
-//     // Daily CheckIn Logic
-//     else if (now.toDateString() !== lastCheckIn.toDateString()) {
-//       const totalDailyIncome = orderData.reduce(
-//         (sum, order) => sum + order.productDailyIncome,
-//         0
-//       );
-
-//       wallet.remainingBalance += totalDailyIncome;
-//       userLastCheckIn[userId] = now;
-
-//       orderData.forEach((order) => {
-//         order.checkInStatus = false; // Set checkInStatus to false for all products
-//         order.save();
-//       });
-//       await wallet.save();
-
-//       await CheckInAmount.create({
-//         userId: userId,
-//         totalCheckInAmount: totalDailyIncome,
-//         newCheckInAmount: totalDailyIncome,
-//         checkInDone: true,
-//       });
-
-//       return res.status(200).json({
-//         message: "Daily check-in complete",
-//         hasProducts: true,
-//         walletBalance: wallet.remainingBalance,
-//       });
-//     } else {
-//       return res.status(200).json({
-//         message: "Already checked in today",
-//         hasProducts: true,
-//         walletBalance: wallet.remainingBalance,
-//       });
-//     }
-//   } catch (error) {
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// });
-
-//
-// app.post("/:userId", async (req, res) => {
-//   const userId = req.params.userId;
-//   const { price, cardData } = req.body;
-
-//   try {
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(404).json({ msg: "User not found" });
-//     }
-
-//     await BuyProduct.create({ userId, ...cardData });
-
-//     // Update user's last purchase date
-//     userLastPurchase[userId] = new Date();
-
-//     res.status(200).json({ msg: "Product purchased successfully!" });
-//   } catch (error) {
-//     console.error("Error processing purchase:", error);
-//     res
-//       .status(500)
-//       .json({ msg: "Error processing your purchase. Please try again later." });
-//   }
-// });
-
-// recharge api
-
 //withdrawal api
 app.post("/withdrawal/:id", async (req, res) => {
   const id = req.params.id;
@@ -972,76 +796,6 @@ app.get("/financial/:id", async (req, res) => {
   }
 });
 
-//admin referral details
-
-// app.get("/users/:id", async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     console.log("userId", id);
-
-//     const userData = await User.find({});
-//     if (!userData || userData.length === 0) {
-//       return res.status(404).json({ error: "Users not found" });
-//     }
-
-//     const results = await Promise.all(
-//       userData.map(async (user) => {
-//         const userId = user.phoneNumber;
-
-//         // Fetch referral information concurrently
-//         const referralPromise = Referral.findOne({ userId: userId });
-
-//         // Fetch referral amount information concurrently
-//         const referralAmountPromise = ReferralAmount.findOne({
-//           userId: userId,
-//         });
-
-//         // Fetch order details concurrently
-//         const orderDetailPromise = BuyProduct.find({ userId: userId });
-
-//         const [referralId, referralAmount, orderDetail] = await Promise.all([
-//           referralPromise,
-//           referralAmountPromise,
-//           orderDetailPromise,
-//         ]);
-
-//         let referralCode = "";
-//         let referralCount = 0;
-//         let referralValue = 0; // Initialize referral value
-
-//         if (referralId) {
-//           referralCode = referralId.referralCode;
-//           const referredUsers = await User.find({ referralCode: referralCode });
-//           referralCount = referredUsers.length;
-//         } else {
-//           console.log(`Referral not found for userId: ${userId}`);
-//         }
-
-//         const orderCount = orderDetail.length;
-
-//         // Check if referral amount data exists
-//         if (referralAmount) {
-//           referralValue = referralAmount.referralAmount;
-//         }
-
-//         return {
-//           userId: user.phoneNumber,
-//           userPassword: user.password,
-//           referralId: referralCode,
-//           referralCount: referralCount,
-//           referralValue: referralValue, // Include referral value in the results
-//           usedReferralCode: user.referralCode, // Include the referral code used by the user
-//           orderCount: orderCount, // Include the order count
-//         };
-//       })
-//     );
-
-//     return res.json(results);
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 app.get("/users/:id", async (req, res) => {
   try {
@@ -1168,53 +922,6 @@ app.get("/details-referral/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-// app.get("/details-referral/:id", async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     // adding pages
-//     const page = parseInt(req.query.page) || 1;
-//     const size = parseInt(req.query.size) || 10;
-//     const skip = (page - 1) * size;
-
-//     // const userDataList = await User.find({});
-//     const userDataList = await User.find({}).skip(skip).limit(size);
-//     const totalItems = await User.countDocuments({});
-//     if (!userDataList || userDataList.length === 0) {
-//       return res.status(404).json({ error: "Users not found" });
-//     }
-
-//     const results = await Promise.all(
-//       userDataList.map(async (userData) => {
-//         const referralId = await Referral.findOne({
-//           userId: userData.phoneNumber,
-//         });
-
-//         const orderDetail = await BuyProduct.find({
-//           userId: userData.phoneNumber,
-//         });
-//         const orderCount = orderDetail.length;
-
-//         let referralCode = referralId
-//           ? referralId.referralCode
-//           : "No referral code";
-
-//         return {
-//           userId: userData.phoneNumber,
-//           userPassword: userData.password,
-//           referralId: referralCode,
-//           orderCount: orderCount,
-//         };
-//       })
-//     );
-
-//     // res.json(results);
-//     res.json({ referrals: results, totalItems: totalItems });
-//   } catch (err) {
-//     console.error("Error fetching user details:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 // add amount
 
@@ -1391,7 +1098,6 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
   }
 });
 
-// Listen on dynamically assigned port by Vercel
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
