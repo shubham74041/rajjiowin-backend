@@ -22,7 +22,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 app.use((req, res, next) => {
   console.log("Request origin:", req.headers.origin);
   next();
@@ -31,16 +30,17 @@ app.use((req, res, next) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (origin === "https://rajjowin.in") {
+      const allowedOrigins = ["https://rajjowin.in", "https://www.rajjowin.in"];
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: "*",
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   })
-)
+);
 
 app.post("/admin-login", async (req, res) => {
   const { username, password } = req.body;
