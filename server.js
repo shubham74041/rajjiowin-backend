@@ -1336,11 +1336,11 @@ app.get("/referral/:id", async (req, res) => {
 });
 
 //Popup
-app.get("/", async (req, res) => {
+app.get("/ok", async (req, res) => {
   try {
     const data = await Popup.find({});
-    // console.log(data);
-    res.json(data);
+    console.log("all good ====////");
+    res.json("all good ====////");
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "An error occurred while fetching data." });
