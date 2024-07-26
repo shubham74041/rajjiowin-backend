@@ -30,8 +30,15 @@ app.use((req, res, next) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["https://rajjowin.in", "https://www.rajjowin.in"];
-      if (allowedOrigins.includes(origin)) {
+      const allowedOrigins = [
+        "https://rajjowin.in",
+        "https://www.rajjowin.in",
+        "http://localhost:3000",
+        "http://rajjowin.in",
+        "http://www.rajjowin.in",
+
+      ];
+      if (allowedOrigins.includes(origin) || !origin) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -42,6 +49,11 @@ app.use(
   })
 );
 
+// Middleware to log request origin
+app.use((req, res, next) => {
+  console.log("Request origin:", req.headers.origin);
+  next();
+});
 app.post("/admin-login", async (req, res) => {
   const { username, password } = req.body;
   const admin = await Admin.findOne({ username, password });
