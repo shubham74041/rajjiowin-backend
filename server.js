@@ -398,21 +398,21 @@ app.post("/custom-popup", async (req, res) => {
 });
 
 // GET call for wallet data
-app.get("/:id", async (req, res) => {
-  const userId = req.params.id;
+// app.get("/:id", async (req, res) => {
+//   const userId = req.params.id;
 
-  try {
-    const data = await Wallet.findOne({ userId: userId });
-    if (!data) {
-      // If no wallet data is found for the provided userId, send a 404 response
-      return res.status(404).json({ error: "Wallet data not found" });
-    }
-    res.json(data);
-  } catch (error) {
-    console.error("Error fetching wallet data:", error);
-    res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
-  }
-});
+//   try {
+//     const data = await Wallet.findOne({ userId: userId });
+//     if (!data) {
+//       // If no wallet data is found for the provided userId, send a 404 response
+//       return res.status(404).json({ error: "Wallet data not found" });
+//     }
+//     res.json(data);
+//   } catch (error) {
+//     console.error("Error fetching wallet data:", error);
+//     res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
+//   }
+// });
 
 // api call for wallet data
 
@@ -1336,13 +1336,13 @@ app.get("/referral/:id", async (req, res) => {
 });
 
 //Popup
-app.get("/ok", async (req, res) => {
+app.get("/check", async (req, res) => {
   try {
-    const data = await Popup.find({});
+    // const data = await Popup.find({});
     console.log("all good ====////");
     res.json("all good ====////");
   } catch (err) {
-    console.log(err);
+    console.log("error",err);
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
