@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use((req, res, next) => {
-  console.log("Request origin:", req.headers.origin);
+  console.log("Request origin:", req.get('origin'));
   next();
 });
 
@@ -37,18 +37,17 @@ app.use(
         "http://rajjowin.in",
         "http://www.rajjowin.in",
       ];
-      console.log("Origin:", origin);
+      console.log("CORS Origin:", origin);
       if (allowedOrigins.includes(origin) || !origin) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: "*",
     credentials: true,
   })
 );
-
 // app.use(
 //   cors({
 //     origin: (origin, callback) => {
