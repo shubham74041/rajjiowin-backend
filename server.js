@@ -1122,7 +1122,7 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
     // Sort products by plan name (e.g., "Plan A" to "Plan F")
     products = products.sort((a, b) => a.title.localeCompare(b.title));
 
-    // console.log(products);
+    console.log(products);
 
     res.json({
       purchasedPlans,
