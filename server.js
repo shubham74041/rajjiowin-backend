@@ -120,7 +120,7 @@ app.post("/change-password", async (req, res) => {
   }
 });
 
-app.post('/', async (req, res) => {
+app.post('/login', async (req, res) => {
   const { phoneNumber, password } = req.body;
 
   try {
@@ -1094,16 +1094,17 @@ app.get("/referral/:id", async (req, res) => {
 });
 
 //Popup
-app.get("/check", async (req, res) => {
+app.get("/", async (req, res) => {
   try {
-    // const data = await Popup.find({});
-    console.log("all good ====////");
-    res.json("all good ====////");
+    const data = await Popup.find({});
+    // console.log(data);
+    res.json(data);
   } catch (err) {
-    console.log("error",err);
+    console.log(err);
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
+
 
 // Getting All Cards
 app.get("/:userId/purchasedPlans", async (req, res) => {
