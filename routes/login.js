@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-router.post("/", async (req, res) => {
+router.post("/login", async (req, res) => {
   const { phoneNumber, password } = req.body;
 
   try {
