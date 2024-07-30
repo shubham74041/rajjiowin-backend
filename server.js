@@ -22,6 +22,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(express.json()); // Body parser for JSON payloads
 app.use((req, res, next) => {
   console.log("Request origin:", req.get('origin'));
   next();
@@ -119,7 +120,7 @@ app.post("/change-password", async (req, res) => {
   }
 });
 
-app.post("/login", async (req, res) => {
+app.post('/login', async (req, res) => {
   const { phoneNumber, password } = req.body;
 
   try {
@@ -130,7 +131,7 @@ app.post("/login", async (req, res) => {
     }
 
     if (user.password === password) {
-      //Successful login
+      // Successful login
       return res.status(200).json({
         token: "dancebasanti",
         message: "Login successful",
@@ -144,6 +145,7 @@ app.post("/login", async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 //Signup endpoint
 // Handle signup with referral code
