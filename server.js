@@ -1112,18 +1112,19 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
     const { userId } = req.params;
     const userRecords = await BuyProduct.find({ userId });
 
-    // Collect all purchased plans from the user records
+    if (!userRecords) {
+      return res.status(404).json({ error: "No records found." });
+    }
+
     const purchasedPlans = userRecords.map((record) => ({
       productTitle: record.productTitle,
     }));
 
     let products = await Products.find({});
 
-    // Sort products by plan name (e.g., "Plan A" to "Plan F")
     products = products.sort((a, b) => a.title.localeCompare(b.title));
 
-    console.log(products);
-
+    console.log("purchaseplans", purchasedPlans, products);
     res.json({
       purchasedPlans,
       cards: products,
@@ -1133,6 +1134,7 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
+
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
