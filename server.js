@@ -28,27 +28,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       const allowedOrigins = [
-//         "https://rajjowin.in",
-//         "https://www.rajjowin.in",
-//         "http://localhost:3000",
-//         "http://rajjowin.in",
-//         "http://www.rajjowin.in",
-//       ];
-//       console.log("CORS Origin:", origin);
-//       if (allowedOrigins.includes(origin) || !origin) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     methods: "*",
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "https://rajjowin.in",
+        "https://www.rajjowin.in",
+        "http://localhost:3000",
+        "http://rajjowin.in",
+        "http://www.rajjowin.in",
+      ];
+      console.log("CORS Origin:", origin);
+      if (allowedOrigins.includes(origin) || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: "*",
+    credentials: true,
+  })
+);
 // app.use(
 //   cors({
 //     origin: (origin, callback) => {
