@@ -28,27 +28,27 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        "https://rajjowin.in",
-        "https://www.rajjowin.in",
-        "http://localhost:3000",
-        "http://rajjowin.in",
-        "http://www.rajjowin.in",
-      ];
-      console.log("CORS Origin:", origin);
-      if (allowedOrigins.includes(origin) || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: "*",
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       const allowedOrigins = [
+//         "https://rajjowin.in",
+//         "https://www.rajjowin.in",
+//         "http://localhost:3000",
+//         "http://rajjowin.in",
+//         "http://www.rajjowin.in",
+//       ];
+//       console.log("CORS Origin:", origin);
+//       if (allowedOrigins.includes(origin) || !origin) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     methods: "*",
+//     credentials: true,
+//   })
+// );
 // app.use(
 //   cors({
 //     origin: (origin, callback) => {
@@ -394,21 +394,21 @@ app.post("/custom-popup", async (req, res) => {
 });
 
 // GET call for wallet data
-// app.get("/:id", async (req, res) => {
-//   const userId = req.params.id;
+app.get("/:id", async (req, res) => {
+  const userId = req.params.id;
 
-//   try {
-//     const data = await Wallet.findOne({ userId: userId });
-//     if (!data) {
-//       // If no wallet data is found for the provided userId, send a 404 response
-//       return res.status(404).json({ error: "Wallet data not found" });
-//     }
-//     res.json(data);
-//   } catch (error) {
-//     console.error("Error fetching wallet data:", error);
-//     res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
-//   }
-// });
+  try {
+    const data = await Wallet.findOne({ userId: userId });
+    if (!data) {
+      // If no wallet data is found for the provided userId, send a 404 response
+      return res.status(404).json({ error: "Wallet data not found" });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching wallet data:", error);
+    res.status(500).json({ error: "Internal server error" }); // Send an error response if something goes wrong
+  }
+});
 
 // api call for wallet data
 
