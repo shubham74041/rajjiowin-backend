@@ -413,7 +413,7 @@ app.get("/:id", async (req, res) => {
 // api call for wallet data
 
 // Endpoint to fetch check-in status
-app.get("/check-in/:userId", async (req, res) => {
+app.get("/check-in-get/:userId", async (req, res) => {
   const userId = req.params.userId;
   try {
     const latestPurchase = await BuyProduct.findOne({ userId }).sort({
