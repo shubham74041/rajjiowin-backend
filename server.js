@@ -23,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json()); // Body parser for JSON payloads
+app.use(express.static(path.join(__dirname, 'client/build')));
 app.use((req, res, next) => {
   console.log("Request origin:", req.get('origin'));
   next();
@@ -1134,8 +1135,9 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
-
-
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
