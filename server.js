@@ -16,6 +16,7 @@ const {
   Admin,
 } = require("./mongo.js");
 
+const path = require('path');
 const app = express();
 
 //middlewares
