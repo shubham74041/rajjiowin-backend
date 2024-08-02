@@ -1137,7 +1137,7 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
   }
 });
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
