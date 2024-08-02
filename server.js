@@ -213,7 +213,7 @@ app.post("/delete-account/:id", async (req, res) => {
 });
 
 //referral
-app.post("/referral", async (req, res) => {
+app.post("/user-referral", async (req, res) => {
   try {
     const { userId } = req.body;
     // console.log(userId);
@@ -1056,7 +1056,7 @@ app.get("/messages/:id", async (req, res) => {
 });
 
 //Referral Show
-app.get("/referral/:id", async (req, res) => {
+app.get("/user-referral/:id", async (req, res) => {
   const userId = req.params.id;
   console.log("Received GET /referral/:id with userId:", userId);
 
