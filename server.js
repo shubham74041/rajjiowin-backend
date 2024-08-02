@@ -122,7 +122,7 @@ app.post("/change-password", async (req, res) => {
   }
 });
 
-app.post('/login', async (req, res) => {
+app.post('/user-login', async (req, res) => {
   const { phoneNumber, password } = req.body;
 
   try {
