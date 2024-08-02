@@ -149,7 +149,7 @@ app.post('/login', async (req, res) => {
 
 //Signup endpoint
 // Handle signup with referral code
-app.post("/signup", async (req, res) => {
+app.post("/user-signup", async (req, res) => {
   const { email, phoneNumber, password, referralCode } = req.body;
 
   try {
