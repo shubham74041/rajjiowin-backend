@@ -255,7 +255,7 @@ const generateReferralCode = () => {
 };
 
 // recharge api
-app.post("/recharge", async (req, res) => {
+app.post("/user-recharge", async (req, res) => {
   const { amount, phoneNumber } = req.body;
   // const user = await User.findOne({ phoneNumber: phoneNumber });
   console.log(amount, phoneNumber);
