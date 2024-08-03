@@ -905,11 +905,12 @@ app.get("/financial/:id", async (req, res) => {
   try {
     const rechargeData = await Recharge.find({ userId: id });
     const withdrawData = await Withdraw.find({ userId: id });
-    const ReferralData = await ReferralAmount.find({ userId: id });
-    const CheckInData = await CheckInAmount.find({ userId: id });
+    const referralData = await ReferralAmount.find({ userId: id });
+    const checkInData = await CheckInAmount.find({ userId: id });
 
     const results = [];
 
+    // Push recharge data into results
     rechargeData.forEach((recharge) => {
       results.push({
         type: "recharge",
@@ -920,6 +921,7 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
+    // Push withdraw data into results
     withdrawData.forEach((withdraw) => {
       results.push({
         type: "withdraw",
@@ -930,25 +932,19 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
-    // ReferralData.forEach((refer) => {
-    //   results.push({
-    //     type: "other",
-    //     amount: refer.newAmount,
-    //     paid: refer.value,
-    //     date: refer.createdAt,
-    //   });
-    // });
-    ReferralData.forEach((refer) => {
+    // Push referral data into results
+    referralData.forEach((refer) => {
       results.push({
         type: "other",
         anotherType: "referral",
-        amount: refer.newAmount, // Ensure this is the correct field for each referral amount
+        amount: refer.newAmount,
         paid: refer.value,
         date: refer.createdAt,
       });
     });
 
-    CheckInData.forEach((checkin) => {
+    // Push check-in data into results
+    checkInData.forEach((checkin) => {
       results.push({
         type: "other",
         anotherType: "checkIn",
@@ -958,6 +954,7 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
+    // console.log("Final results array:", results); // Log final results
     res.json(results);
   } catch (err) {
     console.log(err);
@@ -1064,7 +1061,7 @@ app.get("/users/:id", async (req, res) => {
         const referralPromise = Referral.findOne({ userId: userId });
         const referralAmountPromise = ReferralAmount.findOne({
           userId: userId,
-        });
+        }).sort({ createdAt: -1 });
         const orderDetailPromise = BuyProduct.find({ userId: userId });
 
         const [referralId, referralAmount, orderDetail] = await Promise.all([
@@ -1240,25 +1237,26 @@ app.post("/users/:id", async (req, res) => {
 
     console.log(data);
     // Add or update referral data
-    const referralData = await ReferralAmount.findOne({ userId: id });
+    // Find the latest referral data for the user
+    const existingReferralData = await ReferralAmount.findOne({
+      userId: id,
+    }).sort({ createdAt: -1 });
 
-    if (referralData) {
-      // Update existing referral data
-      referralData.newAmount = amount;
-      referralData.referralAmount += amount;
-      referralData.value = true;
-
-      await referralData.save();
-    } else {
-      // Create new referral data
-      const referralData = new ReferralAmount({
-        userId: id,
-        newAmount: amount,
-        referralAmount: amount,
-        value: true,
-      });
-      await referralData.save();
+    let cumulativeReferralAmount = amount; // Start with the current amount
+    if (existingReferralData) {
+      // If there is existing referral data, add the new amount to the cumulative referral amount
+      cumulativeReferralAmount += existingReferralData.referralAmount;
     }
+
+    // Create a new entry with the updated referral amount
+    const newReferralData = new ReferralAmount({
+      userId: id,
+      newAmount: amount,
+      referralAmount: cumulativeReferralAmount,
+      value: true,
+    });
+
+    await newReferralData.save();
     // console.log("referral ", referralData);
     res.json({ resMsg: "Amount added successfully" });
   } catch (error) {
@@ -1310,7 +1308,9 @@ app.get("/referral/:id", async (req, res) => {
   console.log("Received GET /referral/:id with userId:", userId);
 
   try {
-    const referralAmountData = await ReferralAmount.findOne({ userId });
+    const referralAmountData = await ReferralAmount.findOne({ userId }).sort({
+      createdAt: -1,
+    });
     if (!referralAmountData) {
       console.warn(`ReferralAmount data not found for userId: ${userId}`);
     }
