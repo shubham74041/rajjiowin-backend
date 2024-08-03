@@ -16,7 +16,7 @@ const {
   Admin,
 } = require("./mongo.js");
 
-const path = require('path');
+const path = require("path");
 const app = express();
 
 //middlewares
@@ -24,9 +24,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json()); // Body parser for JSON payloads
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, "build")));
 app.use((req, res, next) => {
-  console.log("Request origin:", req.get('origin'));
+  console.log("Request origin:", req.get("origin"));
   next();
 });
 
@@ -88,7 +88,9 @@ app.post("/admin-login", async (req, res) => {
   }
 });
 // admin change password
-app.post("/change-password", async (req, res) => {
+
+// Replace /change-password => /admin-changePassword
+app.post("/admin-changePassword", async (req, res) => {
   const { username, passkey, newPassword } = req.body;
 
   try {
@@ -122,7 +124,7 @@ app.post("/change-password", async (req, res) => {
   }
 });
 
-app.post('/user-login', async (req, res) => {
+app.post("/user-login", async (req, res) => {
   const { phoneNumber, password } = req.body;
 
   try {
@@ -147,7 +149,6 @@ app.post('/user-login', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 //Signup endpoint
 // Handle signup with referral code
@@ -272,8 +273,10 @@ app.post("/recharge", async (req, res) => {
     console.log("Error:", err);
   }
 });
+// Getting Recharge Data for Admin
 
-app.get("/recharge-data", async (req, res) => {
+// Change get path from /recharge-data from /get-recharge
+app.get("/get-recharge", async (req, res) => {
   try {
     const userData = await Recharge.find({});
     // console.log("User Data:", userData);
@@ -333,7 +336,9 @@ app.post("/recharge-data/:id", async (req, res) => {
 });
 
 //Edit Products
-app.get("/new-product", async (req, res) => {
+
+// change get api from /new-product => /get-products
+app.get("/get-products", async (req, res) => {
   try {
     const productData = await Products.find({});
     res.json(productData);
@@ -371,7 +376,8 @@ app.post("/new-product/:id", async (req, res) => {
 //custom popup
 
 // POST route for handling custom popup data
-app.post("/custom-popup", async (req, res) => {
+// Change post api /custom-popup => /adminCustom-popup
+app.post("/adminCustom-popup", async (req, res) => {
   const { title, message, timePeriod } = req.body;
 
   try {
@@ -396,7 +402,9 @@ app.post("/custom-popup", async (req, res) => {
 });
 
 // GET call for wallet data
-app.get("/:id", async (req, res) => {
+
+// change get api from /:id => /wallet-data/:id
+app.get("/wallet-data/:id", async (req, res) => {
   const userId = req.params.id;
 
   try {
@@ -700,7 +708,9 @@ app.post("/withdrawal/:id", async (req, res) => {
 });
 
 //WithdrawData
-app.get("/withdraw-data/:id", async (req, res) => {
+
+// change api from /withdraw-data/:id => /userwithdraw-data/:id
+app.get("/userwithdraw-data/:id", async (req, res) => {
   const id = req.params.id;
   console.log("userId", id);
   try {
@@ -833,8 +843,10 @@ app.get("/financial/:id", async (req, res) => {
   }
 });
 
+// Getting Users info for Admin
 
-app.get("/users/:id", async (req, res) => {
+// change api from /users/:id to /get-users/:id
+app.get("/get-users/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const page = parseInt(req.query.page, 10) || 1;
@@ -1096,7 +1108,9 @@ app.get("/user-referral/:id", async (req, res) => {
 });
 
 //Popup
-app.get("/", async (req, res) => {
+
+// change api from / => /popup
+app.get("/popup", async (req, res) => {
   try {
     const data = await Popup.find({});
     // console.log(data);
@@ -1106,7 +1120,6 @@ app.get("/", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
-
 
 // Getting All Cards
 app.get("/:userId/purchasedPlans", async (req, res) => {
@@ -1136,8 +1149,8 @@ app.get("/:userId/purchasedPlans", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 });
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
