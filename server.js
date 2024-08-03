@@ -1110,7 +1110,7 @@ app.get("/user-referral/:id", async (req, res) => {
 //Popup
 
 // change api from / => /popup
-app.get("/popup", async (req, res) => {
+app.get("/", async (req, res) => {
   try {
     const data = await Popup.find({});
     // console.log(data);
