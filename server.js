@@ -449,7 +449,7 @@ app.get("/check-in-get/:userId", async (req, res) => {
 });
 
 // Purchase endpoint
-app.post("/:userId", async (req, res) => {
+app.post("/buy-product/:userId", async (req, res) => {
   const userId = req.params.userId;
   const { price, cardData } = req.body;
 
