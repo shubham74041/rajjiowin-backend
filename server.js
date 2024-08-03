@@ -792,11 +792,12 @@ app.get("/financial/:id", async (req, res) => {
   try {
     const rechargeData = await Recharge.find({ userId: id });
     const withdrawData = await Withdraw.find({ userId: id });
-    const ReferralData = await ReferralAmount.find({ userId: id });
-    const CheckInData = await CheckInAmount.find({ userId: id });
+    const referralData = await ReferralAmount.find({ userId: id });
+    const checkInData = await CheckInAmount.find({ userId: id });
 
     const results = [];
 
+    // Push recharge data into results
     rechargeData.forEach((recharge) => {
       results.push({
         type: "recharge",
@@ -807,6 +808,7 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
+    // Push withdraw data into results
     withdrawData.forEach((withdraw) => {
       results.push({
         type: "withdraw",
@@ -817,16 +819,19 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
-    ReferralData.forEach((refer) => {
+    // Push referral data into results
+    referralData.forEach((refer) => {
       results.push({
         type: "other",
+        anotherType: "referral",
         amount: refer.newAmount,
         paid: refer.value,
         date: refer.createdAt,
       });
     });
 
-    CheckInData.forEach((checkin) => {
+    // Push check-in data into results
+    checkInData.forEach((checkin) => {
       results.push({
         type: "other",
         anotherType: "checkIn",
@@ -836,6 +841,7 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
+    // console.log("Final results array:", results); // Log final results
     res.json(results);
   } catch (err) {
     console.log(err);
@@ -874,7 +880,7 @@ app.get("/get-users/:id", async (req, res) => {
         const referralPromise = Referral.findOne({ userId: userId });
         const referralAmountPromise = ReferralAmount.findOne({
           userId: userId,
-        });
+        }).sort({ createdAt: -1 });
         const orderDetailPromise = BuyProduct.find({ userId: userId });
 
         const [referralId, referralAmount, orderDetail] = await Promise.all([
@@ -1073,7 +1079,9 @@ app.get("/user-referral/:id", async (req, res) => {
   console.log("Received GET /referral/:id with userId:", userId);
 
   try {
-    const referralAmountData = await ReferralAmount.findOne({ userId });
+    const referralAmountData = await ReferralAmount.findOne({ userId }).sort({
+      createdAt: -1,
+    });
     if (!referralAmountData) {
       console.warn(`ReferralAmount data not found for userId: ${userId}`);
     }
