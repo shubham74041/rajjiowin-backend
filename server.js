@@ -930,10 +930,19 @@ app.get("/financial/:id", async (req, res) => {
       });
     });
 
+    // ReferralData.forEach((refer) => {
+    //   results.push({
+    //     type: "other",
+    //     amount: refer.newAmount,
+    //     paid: refer.value,
+    //     date: refer.createdAt,
+    //   });
+    // });
     ReferralData.forEach((refer) => {
       results.push({
         type: "other",
-        amount: refer.newAmount,
+        anotherType: "referral",
+        amount: refer.newAmount, // Ensure this is the correct field for each referral amount
         paid: refer.value,
         date: refer.createdAt,
       });
