@@ -1043,7 +1043,7 @@ app.get("/users/:id", async (req, res) => {
     const userData = await User.find({
       $or: [
         { phoneNumber: { $regex: search, $options: "i" } },
-        { referralId: { $regex: search, $options: "i" } },
+        { referralCode: { $regex: search, $options: "i" } },
       ],
     });
 
@@ -1117,7 +1117,7 @@ app.get("/details-referral/:id", async (req, res) => {
     const userDataList = await User.find({
       $or: [
         { phoneNumber: { $regex: search, $options: "i" } },
-        { referralId: { $regex: search, $options: "i" } },
+        { referralCode: { $regex: search, $options: "i" } },
       ],
     });
 
