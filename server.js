@@ -1195,25 +1195,30 @@ app.get("/details-referral/:id", async (req, res) => {
 
     let userDataList = [];
 
-    // Check if the search term is a phone number
-    const isPhoneNumber = /^[0-9]+$/.test(search);
+    if (search) {
+      // Check if the search term is a phone number
+      const isPhoneNumber = /^[0-9]+$/.test(search);
 
-    if (isPhoneNumber) {
-      // Search by phoneNumber in User collection
-      userDataList = await User.find({
-        phoneNumber: { $regex: search, $options: "i" },
-      });
+      if (isPhoneNumber) {
+        // Search by phoneNumber in User collection
+        userDataList = await User.find({
+          phoneNumber: { $regex: search, $options: "i" },
+        });
+      } else {
+        // Search by referralCode in Referral collection
+        const referralDataList = await Referral.find({
+          referralCode: { $regex: search, $options: "i" },
+        });
+
+        // Get userIds from Referral data and then find corresponding users in User collection
+        const userIds = referralDataList.map((ref) => ref.userId);
+        userDataList = await User.find({
+          phoneNumber: { $in: userIds },
+        });
+      }
     } else {
-      // Search by referralCode in Referral collection
-      const referralDataList = await Referral.find({
-        referralCode: { $regex: search, $options: "i" },
-      });
-
-      // Get userIds from Referral data and then find corresponding users in User collection
-      const userIds = referralDataList.map((ref) => ref.userId);
-      userDataList = await User.find({
-        phoneNumber: { $in: userIds },
-      });
+      // If no search term is provided, fetch all users
+      userDataList = await User.find();
     }
 
     if (!userDataList || userDataList.length === 0) {
