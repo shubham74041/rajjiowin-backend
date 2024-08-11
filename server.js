@@ -1040,39 +1040,39 @@ app.get("/users/:id", async (req, res) => {
     const size = parseInt(req.query.size, 10) || 10;
     const search = req.query.search || "";
 
-    // const userData = await User.find({
-    //   $or: [
-    //     { phoneNumber: { $regex: search, $options: "i" } },
-    //     { referralCode: { $regex: search, $options: "i" } },
-    //   ],
-    // });
-    let userData = [];
+    const userData = await User.find({
+      $or: [
+        { phoneNumber: { $regex: search, $options: "i" } },
+        { referralCode: { $regex: search, $options: "i" } },
+      ],
+    });
+    // let userData = [];
 
-    if (search) {
-      // Check if the search term is a phone number
-      const isPhoneNumber = /^[0-9]+$/.test(search);
+    // if (search) {
+    //   // Check if the search term is a phone number
+    //   const isPhoneNumber = /^[0-9]+$/.test(search);
 
-      if (isPhoneNumber) {
-        // Search by phoneNumber in User collection
-        userData = await User.find({
-          phoneNumber: { $regex: search, $options: "i" },
-        });
-      } else {
-        // Search by referralCode in Referral collection
-        const referralDataList = await Referral.find({
-          referralCode: { $regex: search, $options: "i" },
-        });
+    //   if (isPhoneNumber) {
+    //     // Search by phoneNumber in User collection
+    //     userData = await User.find({
+    //       phoneNumber: { $regex: search, $options: "i" },
+    //     });
+    //   } else {
+    //     // Search by referralCode in Referral collection
+    //     const referralDataList = await Referral.find({
+    //       referralCode: { $regex: search, $options: "i" },
+    //     });
 
-        // Get userIds from Referral data and then find corresponding users in User collection
-        const userIds = referralDataList.map((ref) => ref.userId);
-        userData = await User.find({
-          phoneNumber: { $in: userIds },
-        });
-      }
-    } else {
-      // If no search term is provided, fetch all users
-      userData = await User.find();
-    }
+    //     // Get userIds from Referral data and then find corresponding users in User collection
+    //     const userIds = referralDataList.map((ref) => ref.userId);
+    //     userData = await User.find({
+    //       phoneNumber: { $in: userIds },
+    //     });
+    //   }
+    // } else {
+    //   // If no search term is provided, fetch all users
+    //   userData = await User.find();
+    // }
 
     if (!userData || userData.length === 0) {
       return res.status(404).json({ error: "Users not found" });
